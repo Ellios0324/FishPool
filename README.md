@@ -1,371 +1,329 @@
-# 🧠 AI 智能助手系统 — Leader Agent
+# 🐟 FishPool — AI 智能调度大脑
 
-> 一个**智能的 AI 助手调度系统**，就像您有一个"AI 大管家"，
-> 可以帮您写代码、查资料、查天气、整理文档……什么都能干！
+> **FishPool**（原名 Leader Agent）是一个基于 **DeepSeek API** 的智能 AI 助手调度系统。
+> 它就像您的"AI 大管家"——将复杂需求自动拆解、调度最合适的 AI 助手执行，
+> 支持编程、搜索、天气查询、文档处理、知识库管理等多种任务。
 >
-> ✅ 支持 **Windows** · **macOS** · **Linux**
+> ✅ 支持 **macOS** · **Linux** · **Windows**（Git Bash）
 
 ---
 
-## 📖 这是做什么的？
+## 📖 项目简介
 
-想象一下，您有一个**超级聪明的 AI 助手团队**，而 Leader Agent 就是这些助手的"总指挥官"。
+FishPool 是一个**多 Agent 协作系统**。您只需要用自然语言告诉它想要什么，它就会：
 
-您只需要**用中文**告诉它您想要什么，它就会自动调度最合适的助手来完成工作。
+1. 🧩 **拆解需求** — 分析复杂任务，拆分为可执行的子任务
+2. 🎯 **分配任务** — 路由到最合适的子 Agent（编程/搜索/天气/内容优化等）
+3. 🚀 **唤醒执行** — 实时流式输出执行过程，所见即所得
 
-### 它能做什么？
-
-| 功能 | 说明 |
-|------|------|
-| 💻 **写代码/改代码** | 告诉它"帮我创建一个 Python 计算器"，它就能直接生成代码 |
-| 🔍 **联网搜索** | 问它"今天有什么科技新闻？"，它会搜索并总结给您 |
-| 🌤️ **查天气** | 问它"北京明天天气怎么样？"，它会给出详细预报和穿衣建议 |
-| 📝 **整理文档** | 可以把 Markdown 转成 Word 文档，或者生成漂亮的 PDF |
-| 📊 **生成表格** | 告诉它数据，它能生成 Excel 表格（.xlsx 格式） |
-| ✏️ **改写内容** | 可以把技术文档改写成小朋友都能看懂的文章 |
+所有 Agent 共享一套丰富的**技能工具箱**（AgentSkills），包括文件操作、Shell 执行、联网搜索、PDF/Excel 生成、Git 操作等。
 
 ---
 
-## 📋 前置条件（请先准备好这些）
+## ✨ 功能特性
 
-### 1️⃣ Python 3.9 或更高版本
+### 🧠 Agent 矩阵
 
-> Python 是一种编程语言，这个程序就是用 Python 写的，所以需要先安装它。
+| Agent | 文件名 | 职责 |
+|-------|--------|------|
+| 🐟 **FishPool** (Leader) | `LeaderAgent.py` | **总指挥官** — 需求拆解、任务分配、唤醒子 Agent |
+| 💻 **CodingAgent** | `CodingAgent.py` | **编程助手** — 代码编写、项目创建、语法检查、Git 操作 |
+| 🔧 **SkillsManager** | `SkillsManager.py` | **技能管理** — 管理 AgentSkills 技能包的增删改查 |
+| ✏️ **ModifyAgent** | `ModifyAgent.py` | **内容优化** — 受众适配、格式转换、多语言翻译 |
+| 🌤️ **WeatherAgent** | `WeatherAgent.py` | **天气查询** — 多数据源（wttr.in / Open-Meteo）天气预报 |
 
-| 操作系统 | 下载链接 | 安装注意事项 |
-|---------|---------|-------------|
-| 🪟 **Windows** | [python.org/downloads](https://www.python.org/downloads/) | ⚠️ **一定要勾选 "Add Python to PATH"**（看下面的截图） |
-| 🍎 **macOS** | [python.org/downloads](https://www.python.org/downloads/) | 下载 macOS 版安装包，正常安装即可 |
-| 🐧 **Linux** | 系统自带或 `sudo apt install python3` | 一般已预装，用 `python3 --version` 检查 |
+### 🛠️ AgentSkills 技能工具箱
 
-> **Windows 用户注意！** 安装 Python 时，这一步**至关重要**👇
->
-> ```
->  ┌─────────────────────────────────────────────────────────┐
->  │  ☐ Install launcher for all users (recommended)        │
->  │  ☑ **Add Python 3.x to PATH**  ← 一定要勾选这个！      │
->  │                                                         │
->  │  [Install Now]  [Customize installation]                │
->  └─────────────────────────────────────────────────────────┘
-> ```
->
-> 如果忘记勾选，可以卸载重装，或者手动把 Python 添加到系统路径。
+AgentSkills 是系统核心的**可复用技能包**，为所有 Agent 提供基础能力：
 
-### 2️⃣ DeepSeek API 密钥（API Key）
+| 类别 | 技能模块 | 主要功能 |
+|------|---------|---------|
+| 📂 **文件操作** | `file_ops.py` | 读写文件、创建/删除目录、列出文件列表 |
+| 💻 **Shell 执行** | `shell_ops.py` | 在本地执行 Shell 命令，支持超时控制 |
+| ✅ **语法检查** | `syntax_checker.py` | 检查 Python / YAML / HTML / CSS / JS 语法 |
+| 🌐 **联网搜索** | `web_search.py` | Bing 搜索（免费，无需 API Key）、新闻/图片/聚合搜索 |
+| 🗃️ **Git 操作** | `git_ops.py` | init/clone/commit/push/pull/branch/tag 等 16 个操作 |
+| 📊 **Excel 生成** | `xlsx_generator.py` | 生成格式美观的 .xlsx，支持多工作表、斑马纹 |
+| 📄 **PDF 生成** | `pdf_generator.py` | 从文本/Markdown 生成 PDF，支持中文 |
+| 📝 **Markdown 输出** | `markdown_writer.py` | 写入 .md 文件、生成表格/代码块/任务列表 |
+| 🔄 **Markdown 转 DOCX** | `md_to_docx.py` | 将 Markdown 转换为 Word 文档 |
+| 🌤️ **天气查询** | `weather_tool.py` | 输入城市名获取格式化天气预报 |
+| ✏️ **内容优化** | `modify_tool.py` | 受众适配、格式转换、文本简化 |
+| 🖥️ **C 语言项目** | `c_project.py` | 创建/调试 C 项目，添加模块 |
+| ⚡ **C++ 项目** | `cpp_project.py` | 创建/调试 C++ 项目，添加模块 |
+| 🔷 **C# 项目** | `csharp_project.py` | 创建/调试 C# 项目，添加模块 |
+| 📚 **语雀知识库** | `yuque_kb.py` | 语雀知识库的搜索、问答、文档管理 |
+| 🏢 **腾讯 IMA 知识库** | `tencent_kb.py` | 腾讯 IMA 知识库的搜索与问答 |
 
-> 这是一个"钥匙🔑"，让程序能够调用 AI 大脑。
+### 📚 知识库 API 服务器（kb_api_server）
 
-1. 打开 [platform.deepseek.com](https://platform.deepseek.com/)
-2. 注册账号 → 登录
-3. 找到 **API Keys** → 创建一个新的 Key
-4. 复制这个 Key（一串以 `sk-` 开头的文本，类似 `sk-xxx...`）
+内置轻量级 **RAG 知识库服务**，将本地 Markdown 文件目录封装为 REST API：
 
----
-
-## 🚀 快速启动（选您的操作系统）
-
-### 🆕 第一次使用？试试"一键安装启动"
-
-如果您是**第一次使用**，推荐运行以下脚本，它会自动完成**环境检查 + 依赖安装 + 配置引导 + 启动**：
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                                                         │
-│   一键安装启动（自动检查环境 + 安装依赖 + 启动）        │
-│                                                         │
-│   🪟 [Windows]  → 双击  install.bat                    │
-│   🍎 [macOS]    → 终端  bash install.sh                │
-│   🐧 [Linux]    → 终端  bash install.sh                │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
-
-### ⚡ 已安装过依赖？用"快速启动"
-
-如果已经运行过安装脚本，下次可以直接快速启动：
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                                                         │
-│   快速启动（假设已安装依赖，直接启动）                   │
-│                                                         │
-│   🪟 [Windows]  → 双击  launch_leader_terminal.bat     │
-│   🍎 [macOS]    → 双击  launch_leader_terminal.command  │
-│   🐧 [Linux]    → 运行  bash launch_leader_terminal.command │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
+- 🔍 **语义搜索** — 基于 `sentence-transformers` + ChromaDB 的向量检索
+- 🤖 **AI 问答** — 可选集成 LLM，基于知识库内容生成回答
+- 🔄 **热重载** — 文档变更后无需重启服务
+- 📖 自动生成 Swagger API 文档（`/docs`）
 
 ---
 
-## 🪟 Windows 用户请看这里
+## 📁 项目结构
 
-### 第 1 步：解压文件
-
-找到下载的 `project.zip` 压缩包。
-
-- **右键点击** → **"全部解压缩"**（Windows 自带）
-- 或者用 7-Zip / WinRAR 解压
-- 解压后会得到一个名为 `project` 的文件夹
-
-### 第 2 步：运行 🎉
-
-进入 `project` 文件夹，您有两种选择：
-
-#### 🆕 方式一：一键安装启动（推荐首次使用）
-
-双击 **`install.bat`** — 自动完成环境检查、依赖安装、API Key 配置引导，然后启动程序。
-
-#### ⚡ 方式二：快速启动（已安装过依赖）
-
-双击 **`launch_leader_terminal.bat`** — 直接启动（假设依赖已安装）。
-
-如果双击后弹出黑色窗口并显示乱码？别担心，这是正常现象，程序会自动解决这个问题。
-
-### 遇到问题？
-
-| 问题 | 原因 | 解决方法 |
-|------|------|---------|
-| 🔴 提示"python 不是内部或外部命令" | Python 没装好或没加到 PATH | 重新安装 Python，**一定勾选 "Add Python to PATH"** |
-| 🔴 提示"pip 不是内部或外部命令" | pip 没装好 | 试试 `python -m pip install -r AgentSkills\requirements.txt` |
-| 🔴 窗口一闪就没了 | 出错了但来不及看 | 按住 Shift 键，右键点击文件夹空白处 → "在此处打开 PowerShell 窗口" → 输入脚本名运行 |
-| 🔴 显示乱码、方块字 | 编码问题 | 本程序已自动处理（`chcp 65001`），如果还有问题请用 Windows Terminal |
+```
+project/
+├── LeaderAgent.py              # 🧠 FishPool 总指挥官（主入口）
+├── CodingAgent.py              # 💻 编程助手
+├── SkillsManager.py            # 🔧 技能管理
+├── ModifyAgent.py              # ✏️ 内容优化
+├── WeatherAgent.py             # 🌤️ 天气查询
+├── SkillsManager.py            # 🔧 技能管理
+├── cli_input.py                # ⌨️ 中文输入优化
+├── cli_style.py                # 🎨 终端界面美化
+│
+├── AgentSkills/                # 📦 核心技能包
+│   ├── __init__.py             #   包入口
+│   ├── skill.py                #   Skill 统一对外接口
+│   ├── config.yaml             #   配置文件
+│   ├── requirements.txt        #   依赖清单
+│   ├── core/
+│   │   ├── agent.py            #   Agent 主循环
+│   │   └── llm_client.py       #   LLM 客户端封装
+│   └── skills/                 #   技能模块
+│       ├── file_ops.py         #   文件操作
+│       ├── shell_ops.py        #   Shell 命令执行
+│       ├── syntax_checker.py   #   语法检查
+│       ├── web_search.py       #   联网搜索
+│       ├── git_ops.py          #   Git 操作
+│       ├── xlsx_generator.py   #   Excel 生成
+│       ├── pdf_generator.py    #   PDF 生成
+│       ├── markdown_writer.py  #   Markdown 输出
+│       ├── md_to_docx.py       #   Markdown 转 DOCX
+│       ├── weather_tool.py     #   天气查询
+│       ├── modify_tool.py      #   内容优化
+│       ├── c_project.py        #   C 语言项目
+│       ├── cpp_project.py      #   C++ 项目
+│       ├── csharp_project.py   #   C# 项目
+│       ├── yuque_kb.py         #   语雀知识库
+│       └── tencent_kb.py       #   腾讯 IMA 知识库
+│
+├── kb_api_server/              # 📚 知识库 API 服务器
+│   ├── server.py               #   主程序（FastAPI）
+│   ├── requirements.txt        #   依赖清单
+│   ├── start.sh                #   Linux/macOS 启动脚本
+│   ├── start.bat               #   Windows 启动脚本
+│   └── README.md               #   独立文档
+│
+├── launch_leader_terminal.command  # 🚀 macOS/Linux 启动脚本
+├── launch_leader_terminal.py       # 🐍 Python 启动器
+├── LeaderAgent_Terminal.app/       # 🍎 macOS 应用程序包
+│
+├── requirements.txt                # 系统依赖清单
+├── .env                            # 🔑 环境配置（含 API Key）
+├── .gitignore                      # Git 忽略规则
+└── README.md                       # 本文件
+```
 
 ---
 
-## 🍎 macOS 用户请看这里
+## 🚀 快速开始
 
-### 第 1 步：解压文件
+### 前置条件
 
-找到下载的 `project.zip` 压缩包，**双击**即可自动解压。
-解压后会得到一个名为 `project` 的文件夹。
+1. **Python 3.9 或更高版本**
+2. **DeepSeek API 密钥** — 从 [platform.deepseek.com](https://platform.deepseek.com/) 获取
 
-### 第 2 步：运行 🎉
-
-进入 `project` 文件夹，打开**终端（Terminal）**，您有两种选择：
-
-#### 🆕 方式一：一键安装启动（推荐首次使用）
+### 1️⃣ 安装依赖
 
 ```bash
-bash install.sh
+# 安装核心依赖
+pip install -r AgentSkills/requirements.txt
+
+# 如果使用知识库服务器，额外安装
+pip install -r kb_api_server/requirements.txt
 ```
 
-或者先设置执行权限再运行：
+### 2️⃣ 配置 API 密钥
 
-```bash
-chmod +x install.sh
-./install.sh
+在项目根目录创建 `.env` 文件：
+
+```env
+DEEPSEEK_API_KEY=sk-你的密钥
 ```
 
-#### ⚡ 方式二：快速启动（已安装过依赖）
+> ⚠️ `=` 前后不要有空格，不要有多余空行
+
+### 3️⃣ 启动系统
+
+#### 🍎 macOS / 🐧 Linux
 
 ```bash
-chmod +x launch_leader_terminal.command
-./launch_leader_terminal.command
-```
+# 方式一：双击启动（macOS）
+# 双击 launch_leader_terminal.command
 
-或者直接双击 `launch_leader_terminal.command` 文件。
-
-> 双击 .command 文件时，如果提示"无法打开，因为无法验证开发者"，
-> 请右键点击 → **打开方式** → **终端**（Terminal）。
-
-### 遇到问题？
-
-| 问题 | 原因 | 解决方法 |
-|------|------|---------|
-| 🔴 提示"权限不足" | 文件没有执行权限 | 运行 `chmod +x install.sh` 或右键 → 打开方式 → 终端 |
-| 🔴 双击后闪一下没反应 | 系统安全限制 | 右键 → 打开方式 → 终端 |
-| 🔴 提示"python3: command not found" | 没安装 Python | 从 python.org 下载安装 |
-| 🔴 终端里显示乱码 | 终端编码问题 | 终端菜单 → 偏好设置 → 编码 → 选择 UTF-8 |
-
----
-
-## 🐧 Linux 用户请看这里
-
-### 第 1 步：解压文件
-
-```bash
-# 在终端中进入下载目录
-cd ~/Downloads
-
-# 解压
-unzip project.zip -d project
-
-# 进入项目目录
-cd project
-```
-
-### 第 2 步：运行 🎉
-
-进入 `project` 文件夹，您有两种选择：
-
-#### 🆕 方式一：一键安装启动（推荐首次使用）
-
-```bash
-bash install.sh
-```
-
-或
-
-```bash
-chmod +x install.sh
-./install.sh
-```
-
-#### ⚡ 方式二：快速启动（已安装过依赖）
-
-```bash
-chmod +x launch_leader_terminal.command
+# 方式二：终端启动
 bash launch_leader_terminal.command
-```
 
-或者直接用 Python 运行：
-
-```bash
-# 安装依赖
-pip3 install -r AgentSkills/requirements.txt
-
-# 启动
+# 方式三：直接运行
 python3 LeaderAgent.py
 ```
 
-### 遇到问题？
+#### 🪟 Windows
 
-| 问题 | 原因 | 解决方法 |
-|------|------|---------|
-| 🔴 提示"python3: not found" | 没安装 Python | `sudo apt install python3 python3-pip` (Debian/Ubuntu) 或 `sudo dnf install python3` (Fedora) |
-| 🔴 提示"command -v 不存在" | 使用古老 shell | 请使用 bash，本脚本需要 bash |
+在 **Git Bash** 中运行：
 
----
-
-## 🌟 启动成功后会看到什么？
-
-启动成功后，您会看到一个**漂亮的彩色界面**，类似这样：
-
-```
-╔══════════════════════════════════════════╗
-║  🧠  Leader Agent — 智能调度大脑        ║
-║  版本 v2.0.0                            ║
-╚══════════════════════════════════════════╝
-
-  🛠️  CodingAgent     ✅   编程任务
-  📚  SkillsManager   ✅   技能管理
-  ✏️  ModifyAgent     ✅   内容优化
-  🌤️  WeatherAgent    ✅   天气查询
-
-  /help  查看帮助  |  /exit  退出  |  Ctrl+C  中断
-
-  🚀 Leader >
-```
-
-看到这个界面，就说明**启动成功了**！🎉🎉🎉
-
-### 开始使用
-
-在 `🚀 Leader >` 提示符后面直接输入您的需求，比如：
-
-- "帮我创建一个 Python 计算器程序"
-- "北京未来三天的天气怎么样？"
-- "搜索一下最近的 AI 新闻"
-- "帮我把这段文字翻译成英文：..."
-
-输入后按回车，AI 就会开始工作啦！它会实时显示它的思考过程和执行结果。
-
-### 退出程序
-
-- 输入 `/exit` 或 `exit` 然后按回车
-- 或按 `Ctrl+C`
-
----
-
-## ❗ 常见问题（FAQ）
-
-### Q1：我看不懂英文，有没有中文界面？
-**答：** 有的！整个程序都是中文界面，包括提示信息和使用说明。如果看到乱码，请确保您的终端支持 UTF-8 编码。
-
-### Q2：程序运行很慢或者没反应？
-**答：**
-1. 检查您的网络是否正常
-2. AI 思考需要一些时间，特别是复杂任务
-3. 如果超过 2 分钟没反应，按 `Ctrl+C` 中断后重试
-
-### Q3：我改了 .env 文件，但程序还是说 API Key 不对？
-**答：**
-1. 确保 `.env` 文件内容是：`DEEPSEEK_API_KEY=sk-你的密钥`
-2. `=` 前后**不要有空格**
-3. 确保没有多余的空行或特殊字符
-4. 保存文件后**重新运行程序**
-
-### Q4：Windows 上双击 .bat 文件后窗口一闪就没了？
-**答：**
-按住 `Shift` 键，在文件夹空白处右键点击 → "在此处打开 PowerShell 窗口" → 输入以下命令：
-```
-.\install.bat
-```
-或
-```
-.\launch_leader_terminal.bat
-```
-这样窗口就不会关闭，您可以看到具体的错误信息。
-
-### Q5：macOS 上双击 .command 文件打不开？
-**答：**
-1. 右键点击 `.command` 文件
-2. 选择"打开方式" → "终端"
-3. 或者打开"终端"应用，输入：
-   ```bash
-   cd 项目文件夹路径
-   bash install.sh
-   ```
-
-### Q6：提示 "ModuleNotFoundError: No module named 'openai'"
-**答：**
-依赖没有安装成功。手动运行：
 ```bash
-pip install -r AgentSkills/requirements.txt
+bash launch_leader_terminal.command
 ```
-（Windows 用户用 `pip`，macOS/Linux 用户用 `pip3`）
 
-### Q7：终端显示乱码或颜色不对？
-**答：**
-- **Windows 用户**：建议从微软商店免费安装 **Windows Terminal**
-- **macOS 用户**：使用系统自带的"终端"应用即可
-- 不影响程序功能，只是显示效果略有不同
+或直接：
+
+```bash
+python LeaderAgent.py
+```
+
+### 4️⃣ 使用示例
+
+启动后在 `🚀 Leader >` 提示符后输入：
+
+```
+# 编程任务
+"帮我创建一个 Python 计算器程序"
+
+# 天气查询
+"北京未来三天的天气怎么样？"
+
+# 联网搜索
+"搜索一下最近的 AI 新闻"
+
+# 文档处理
+"帮我把这篇 Markdown 转成 Word 文档"
+
+# 知识库问答（需要先启动 kb_api_server）
+"根据知识库回答：这个产品支持哪些功能？"
+```
 
 ---
 
-## 📁 项目文件说明
+## 📚 知识库服务器（可选）
 
-| 文件/文件夹 | 说明 |
-|------------|------|
-| `LeaderAgent.py` | 🧠 **总指挥官** — 主程序，对话入口 |
-| `CodingAgent.py` | 💻 **编程助手** — 处理编程任务 |
-| `SkillsManager.py` | 🔧 **技能管理员** — 管理程序的各种能力 |
-| `ModifyAgent.py` | ✏️ **内容优化师** — 改写/翻译内容 |
-| `WeatherAgent.py` | 🌤️ **天气预报员** — 查询天气 |
-| `AgentSkills/` | 📦 **技能包** — 所有能力的代码库 |
-| `cli_input.py` | ⌨️ 中文输入优化（解决退格键问题） |
-| `cli_style.py` | 🎨 界面美化（漂亮的颜色和图标） |
-| `.env` | 🔑 **配置文件**（存放您的 API 密钥，请勿分享！） |
-| `.env.example` | 📄 配置模板（告诉您 .env 应该长什么样） |
-| `install.bat` | 🪟 **Windows 一键安装启动器**（首次使用推荐） |
-| `install.sh` | 🐧🍎 **macOS/Linux 一键安装启动器**（首次使用推荐） |
-| `launch_leader_terminal.bat` | 🪟 **Windows 快速启动脚本**（已安装依赖后用） |
-| `launch_leader_terminal.command` | 🍎🐧 **macOS/Linux 快速启动脚本**（双击或终端运行） |
-| `launch_leader_terminal.py` | 🐍 **Python 启动器**（命令行启动） |
-| `LeaderAgent_Terminal.app/` | 🍎 macOS 应用程序包 |
+FishPool 自带 RAG 知识库服务，可将本地文档转为可检索的知识库：
+
+```bash
+# 1. 准备文档
+mkdir kb_api_server/docs
+# 将 .md 文件放入 kb_api_server/docs/ 目录
+
+# 2. 启动服务
+cd kb_api_server
+bash start.sh
+
+# 3. 验证服务
+curl http://localhost:8000/health
+
+# 4. 搜索/问答
+curl -X POST http://localhost:8000/search \
+  -H "Content-Type: application/json" \
+  -d '{"query": "搜索关键词", "top_k": 3}'
+```
+
+详见 `kb_api_server/README.md`。
 
 ---
 
 ## 🎯 使用技巧
 
-- 💡 **说得越详细，结果越好**
-  - 试试："帮我写一个 Python 计算器" → 一般
-  - 试试："帮我写一个 Python 计算器，要有加、减、乘、除功能，界面是终端版的" → 更好！
-- 🔄 **如果结果不满意**：直接说"改一下"，或者提出具体修改意见
-- 🛑 **想中断当前任务**：按 `Ctrl+C`
-- 📋 **想看所有命令**：输入 `/help`
-- 🧹 **屏幕太乱了**：输入 `/clear` 清屏
+| 技巧 | 说明 |
+|------|------|
+| 💡 | **说得越详细，结果越好** — 明确描述需求和约束 |
+| 🔄 | **结果不满意？** 直接说"改一下"，或提出具体意见 |
+| 🛑 | **中断任务** — 按 `Ctrl+C` |
+| 📋 | **查看帮助** — 输入 `/help` |
+| 🧹 | **清屏** — 输入 `/clear` |
+| 🚪 | **退出程序** — 输入 `/exit` 或按 `Ctrl+C` |
+
+---
+
+## 🛠️ 开发者指南
+
+### 在代码中使用 AgentSkills
+
+```python
+from AgentSkills import Skill
+
+# 创建 Skill 实例
+skill = Skill()
+
+# 单次处理
+reply = skill.process("读取当前目录下的文件列表")
+print(reply)
+
+# 交互式对话
+skill.run()
+```
+
+### 自定义配置
+
+```python
+skill = Skill(
+    api_key="your-api-key",
+    base_url="https://api.deepseek.com",
+    model="deepseek-v4-flash",
+    temperature=0.3,
+)
+```
+
+### 配置文件 (`AgentSkills/config.yaml`)
+
+```yaml
+llm:
+  api_key: "${DEEPSEEK_API_KEY}"
+  base_url: "https://api.deepseek.com"
+  model: "deepseek-v4-flash"
+  temperature: 0.3
+```
+
+---
+
+## 🔧 技术栈
+
+| 类别 | 技术 |
+|------|------|
+| 🐍 **编程语言** | Python 3.9+ |
+| 🤖 **AI 模型** | DeepSeek API（兼容 OpenAI 格式） |
+| 🌐 **API 框架** | FastAPI（知识库服务器） |
+| 📦 **向量检索** | sentence-transformers + ChromaDB |
+| 🎨 **终端美化** | ANSI 转义码（零依赖） |
+| 📊 **文件处理** | openpyxl, fpdf2, python-docx, markdown |
+| 🌤️ **天气数据** | wttr.in, Open-Meteo API |
+| 🔍 **搜索引擎** | Bing Search API |
+
+---
+
+## ❓ 常见问题
+
+### Q1: 提示 `ModuleNotFoundError`
+**答：** 依赖未安装成功。运行：
+```bash
+pip install -r AgentSkills/requirements.txt
+```
+
+### Q2: 提示 API Key 错误
+**答：** 检查 `.env` 文件：
+- 确保内容为 `DEEPSEEK_API_KEY=sk-xxx`
+- `=` 前后不要有空格
+- 保存后重启程序
+
+### Q3: 程序运行很慢
+**答：** AI 思考需要时间，网络请求也可能有延迟。复杂任务请耐心等待。如果超过 2 分钟没反应，按 `Ctrl+C` 中断重试。
+
+### Q4: macOS 双击 .command 文件打不开
+**答：** 右键点击 → "打开方式" → "终端"，或在终端运行：
+```bash
+chmod +x launch_leader_terminal.command
+./launch_leader_terminal.command
+```
+
+### Q5: 终端显示乱码
+**答：** 确保终端使用 UTF-8 编码。Windows 建议使用 Windows Terminal。
 
 ---
 
@@ -377,7 +335,6 @@ pip install -r AgentSkills/requirements.txt
 
 > 💖 **感谢您的使用！**
 >
-> 如果遇到任何问题，请先看上面的"常见问题"部分。
-> 如果还是搞不定，请联系给您这个程序的人寻求帮助。
+> FishPool = 智能鱼池，汇集多种 AI 能力，让复杂任务变得简单。
 >
 > **祝您使用愉快！** 🎉
