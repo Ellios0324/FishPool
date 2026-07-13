@@ -1,0 +1,43 @@
+#!/bin/bash
+# =============================================================================
+#  LeaderAgent_Terminal.app — macOS 桌面应用启动器
+#  双击 .app 图标 → 打开 Terminal → 运行 LeaderAgent CLI
+# =============================================================================
+
+# 解析出真正的项目目录（.app 包内的软链接指向真实路径）
+# 获取启动脚本所在目录，然后向上到 Contents，再向上到 .app
+APP_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+PROJECT_DIR="$(cd "$(dirname "$0")/../../../.." && pwd)"
+
+# 如果 .app 在 PyCharmMiscProject 目录下，直接使用该目录
+if [ -f "$PROJECT_DIR/LeaderAgent.py" ]; then
+    TARGET_DIR="$PROJECT_DIR"
+elif [ -f "$APP_DIR/LeaderAgent.py" ]; then
+    TARGET_DIR="$APP_DIR"
+else
+    # 尝试常见的放置位置
+    TARGET_DIR="$HOME/PyCharmMiscProject"
+fi
+
+# 切换到项目目录
+cd "$TARGET_DIR"
+
+# ── 检测并激活项目的虚拟环境 ──
+VENV_DIR="$TARGET_DIR/.venv"
+VENV_ACTIVATE=""
+if [ -d "$VENV_DIR" ]; then
+    # 虚拟环境存在，构造激活命令（用于在 osascript 的终端中使用）
+    VENV_ACTIVATE="VENV_DIR=\"$TARGET_DIR/.venv\" && echo '  🔌 正在激活虚拟环境...' && source \"\$VENV_DIR/bin/activate\" && python3 -c \"import openai\" 2>/dev/null && echo '  ✅ 虚拟环境已激活，依赖检查通过'"
+else
+    # 虚拟环境不存在，尝试安装依赖
+    VENV_ACTIVATE="echo '  ⚠️  未找到虚拟环境，尝试使用系统 Python...' && (python3 -c \"import openai\" 2>/dev/null || pip3 install openai python-dotenv 2>/dev/null)"
+fi
+
+# ── 打开终端窗口并运行启动脚本 ──
+osascript <<EOS
+tell application "Terminal"
+    activate
+    set newTab to do script "cd \"$TARGET_DIR\" && clear && echo '' && echo '╔══════════════════════════════════════════════════════════════╗' && echo '║                                                              ║' && echo '║     🚀  LeaderAgent CLI  正在启动中...                       ║' && echo '║                                                              ║' && echo '║     智能 Agent 调度大脑                                      ║' && echo '║     CodingAgent · SkillsManager · SearchingAgent             ║' && echo '║     ModifyAgent · WeatherAgent                               ║' && echo '║                                                              ║' && echo '╚══════════════════════════════════════════════════════════════╝' && echo '' && $VENV_ACTIVATE && echo '' && python3 LeaderAgent.py && echo '' && echo '═══════════════════════════════════════════════════════════════' && echo '  ✅ LeaderAgent 已退出' && echo '═══════════════════════════════════════════════════════════════' && echo '' && echo '按 Enter 键关闭此窗口...' && read"
+    set custom title of newTab to "🧠 LeaderAgent CLI"
+end tell
+EOS
