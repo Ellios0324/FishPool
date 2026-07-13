@@ -7,6 +7,7 @@ Git 操作工具模块
 """
 
 import os
+import re
 import subprocess
 
 
@@ -38,6 +39,71 @@ def _run_git_command(args: list, cwd: str = None) -> str:
         return "Git not found. Please install Git first."
     except Exception as e:
         return f"Error executing git command: {e}"
+
+
+# ─── Conventional Commit 自动标签规则 ───
+# (正则模式, 标签, 优先级) — 优先级数字越小越优先
+_COMMIT_TAG_RULES = [
+    (r'(.+[/\\])?test_.*\.(py|js|ts|go)$', 'test', 1),
+    (r'(.+[/\\])?.*_test\.(py|js|ts|go)$', 'test', 1),
+    (r'(^|[/\\])tests?[/\\]', 'test', 1),
+    (r'.*\.(md|rst|txt)$', 'docs', 2),
+    (r'.*\.(css|scss|less|sass)$', 'style', 3),
+    (r'(^|[/\\])Dockerfile', 'chore', 4),
+    (r'(^|[/\\])Makefile$', 'chore', 4),
+    (r'\.gitignore$', 'chore', 4),
+    (r'.*\.(yaml|yml|toml|ini|cfg|conf)$', 'chore', 4),
+    (r'requirements.*\.txt$', 'chore', 4),
+    (r'.*\.(py|go|js|ts|jsx|tsx|rb|java|rs)$', 'feat', 5),
+    (r'.*\.(sh|bash|zsh)$', 'feat', 5),
+]
+
+_KNOWN_TAGS = {'feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'revert'}
+
+
+def _get_staged_files(project_path: str) -> list:
+    """获取已暂存（staged）的文件列表
+
+    Args:
+        project_path: Git 仓库路径
+
+    Returns:
+        暂存的文件路径列表
+    """
+    result = _run_git_command(["diff", "--cached", "--name-only"], cwd=project_path)
+    if result.startswith("Git error") or not result:
+        return []
+    return [f.strip() for f in result.split("\n") if f.strip()]
+
+
+def _detect_commit_tag(project_path: str) -> str:
+    """根据暂存区中的文件类型，自动检测最合适的 Conventional Commit 标签
+
+    Args:
+        project_path: Git 仓库路径
+
+    Returns:
+        检测到的标签字符串（如 "feat"），未匹配到时返回空字符串
+    """
+    files = _get_staged_files(project_path)
+    if not files:
+        return ""
+
+    best_tag = ""
+    best_priority = 999
+
+    for pattern, tag, priority in _COMMIT_TAG_RULES:
+        for f in files:
+            if re.search(pattern, f, re.IGNORECASE):
+                if priority < best_priority:
+                    best_tag = tag
+                    best_priority = priority
+                break
+        # 如果已经找到了最高优先级（1），提前结束
+        if best_priority == 1:
+            break
+
+    return best_tag
 
 
 def check_git_installed() -> str:
@@ -135,17 +201,30 @@ def git_add(project_path: str, files: str = ".") -> str:
     return f"✅ 已暂存文件: {files}"
 
 
-def git_commit(project_path: str, message: str, author: str = None) -> str:
+def git_commit(project_path: str, message: str, author: str = None, auto_tag: bool = True) -> str:
     """提交暂存区的变更到仓库
+
+    支持自动添加 Conventional Commit 标签（auto_tag=True 时生效）。
+    如果 message 已包含标签（如 "feat: xxx"），则不会重复添加。
 
     Args:
         project_path: Git 仓库路径
         message: 提交信息
         author: 作者信息（可选，格式如 "User <user@example.com>"）
+        auto_tag: 是否根据改动文件类型自动添加标签（默认 True）
 
     Returns:
         成功或失败的消息，包含提交的哈希值和分支信息
     """
+    # 自动检测并添加 Conventional Commit 标签
+    if auto_tag:
+        # 检查提交信息是否已包含已知标签
+        first_word = message.split(":")[0].strip() if ":" in message else ""
+        if first_word.lower() not in _KNOWN_TAGS:
+            tag = _detect_commit_tag(project_path)
+            if tag:
+                message = f"{tag}: {message}"
+
     args = ["commit", "-m", message]
     if author:
         args.extend(["--author", author])
