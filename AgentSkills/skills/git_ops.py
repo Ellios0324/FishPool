@@ -61,6 +61,34 @@ _COMMIT_TAG_RULES = [
 _KNOWN_TAGS = {'feat', 'fix', 'docs', 'style', 'refactor', 'perf', 'test', 'build', 'ci', 'chore', 'revert'}
 
 
+# ─── GitHub Style 自动 Label 规则 ───
+# (正则模式, label, 优先级) — 优先级数字越小越优先
+_COMMIT_LABEL_RULES = [
+    # test 相关
+    (r'(.+[/\\])?test_.*\.(py|js|ts|go)$', '[test]', 1),
+    (r'(.+[/\\])?.*_test\.(py|js|ts|go)$', '[test]', 1),
+    (r'(^|[/\\])tests?[/\\]', '[test]', 1),
+    # 文档
+    (r'.*\.(md|rst|txt)$', '[documentation]', 2),
+    # 样式
+    (r'.*\.(css|scss|less|sass)$', '[style]', 3),
+    # 构建/配置
+    (r'(^|[/\\])Dockerfile', '[dependencies]', 4),
+    (r'(^|[/\\])Makefile$', '[dependencies]', 4),
+    (r'\.gitignore$', '[dependencies]', 4),
+    (r'.*\.(yaml|yml|toml|ini|cfg|conf)$', '[dependencies]', 4),
+    (r'requirements.*\.txt$', '[dependencies]', 4),
+    # 安全相关
+    (r'.*/(auth|security|ssl|cert|encrypt)[^/]*\.', '[security]', 2),
+    (r'.*\.(pem|crt|key|cer)$', '[security]', 2),
+    # 代码文件
+    (r'.*\.(py|go|js|ts|jsx|tsx|rb|java|rs)$', '[enhancement]', 5),
+    (r'.*\.(sh|bash|zsh)$', '[enhancement]', 5),
+]
+
+_ALL_LABELS = {'[bug]', '[documentation]', '[enhancement]', '[security]', '[test]', '[style]', '[dependencies]', '[performance]', '[refactor]'}
+
+
 def _get_staged_files(project_path: str) -> list:
     """获取已暂存（staged）的文件列表
 
@@ -104,6 +132,32 @@ def _detect_commit_tag(project_path: str) -> str:
             break
 
     return best_tag
+
+
+def _detect_commit_labels(project_path: str) -> list:
+    """根据暂存区中的文件类型，检测匹配的 GitHub 风格 Label 列表
+
+    Args:
+        project_path: Git 仓库路径
+
+    Returns:
+        匹配的 label 列表（如 ['[enhancement]', '[test]']），按优先级排序去重
+    """
+    files = _get_staged_files(project_path)
+    if not files:
+        return []
+
+    labels_found = {}  # label -> best_priority
+    for pattern, label, priority in _COMMIT_LABEL_RULES:
+        for f in files:
+            if re.search(pattern, f, re.IGNORECASE):
+                if label not in labels_found or priority < labels_found[label]:
+                    labels_found[label] = priority
+                break
+
+    # 按优先级排序
+    sorted_labels = sorted(labels_found.keys(), key=lambda l: labels_found[l])
+    return sorted_labels
 
 
 def check_git_installed() -> str:
@@ -201,29 +255,42 @@ def git_add(project_path: str, files: str = ".") -> str:
     return f"✅ 已暂存文件: {files}"
 
 
-def git_commit(project_path: str, message: str, author: str = None, auto_tag: bool = True) -> str:
+def git_commit(project_path: str, message: str, author: str = None, auto_tag: bool = True, auto_label: bool = True) -> str:
     """提交暂存区的变更到仓库
 
-    支持自动添加 Conventional Commit 标签（auto_tag=True 时生效）。
-    如果 message 已包含标签（如 "feat: xxx"），则不会重复添加。
+    支持自动添加 Conventional Commit 标签（auto_tag=True）和 GitHub 风格 Label（auto_label=True）。
+    如果 message 已包含标签（如 "feat: xxx"），则不会重复添加标签。
+
+    Labels 会去重并按优先级追加到提交信息末尾，格式如 "feat: 新增登录功能 [enhancement]"
 
     Args:
         project_path: Git 仓库路径
         message: 提交信息
         author: 作者信息（可选，格式如 "User <user@example.com>"）
-        auto_tag: 是否根据改动文件类型自动添加标签（默认 True）
+        auto_tag: 是否根据改动文件类型自动添加 Conventional Commit 前缀（默认 True）
+        auto_label: 是否根据改动文件类型自动添加 GitHub 风格 Label（默认 True）
 
     Returns:
         成功或失败的消息，包含提交的哈希值和分支信息
     """
-    # 自动检测并添加 Conventional Commit 标签
+    # 1. 自动检测并添加 Conventional Commit 标签前缀
     if auto_tag:
-        # 检查提交信息是否已包含已知标签
         first_word = message.split(":")[0].strip() if ":" in message else ""
         if first_word.lower() not in _KNOWN_TAGS:
             tag = _detect_commit_tag(project_path)
             if tag:
                 message = f"{tag}: {message}"
+
+    # 2. 自动检测并添加 GitHub 风格 Label（去重）
+    if auto_label:
+        labels = _detect_commit_labels(project_path)
+        # 检查提交信息中是否已包含这些 label
+        existing_labels = re.findall(r'\[[a-z\-]+\]', message, re.IGNORECASE)
+        existing_set = {l.lower() for l in existing_labels}
+        for label in labels:
+            if label.lower() not in existing_set:
+                message += f" {label}"
+                existing_set.add(label.lower())
 
     args = ["commit", "-m", message]
     if author:
