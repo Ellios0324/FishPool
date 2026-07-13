@@ -246,5 +246,5 @@ info "  • 输入 /exit 退出程序"
 info "  • 按 Ctrl+C 中断当前任务"
 echo ""
 
-# ── 用 exec 替换当前进程，更干净 ──
-exec $PYTHON_CMD LeaderAgent.py
+# ── 使用普通进程启动 CLI，退出后返回终端 ──
+$PYTHON_CMD LeaderAgent.py
