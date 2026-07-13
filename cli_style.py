@@ -2,7 +2,7 @@
 cli_style — CLI 美化工具集 (Claude Code Style Enhanced)
 
 提供 ANSI 颜色、ASCII 艺术横幅、面板框、消息标签、状态指示器等美化功能，
-供 LeaderAgent / CodingAgent / SkillsManager 等 CLI 程序使用。
+供 FishPool / KillerWhale / FishFarmer 等 CLI 程序使用。
 """
 
 import os
@@ -79,7 +79,7 @@ class Color:
     CLAUDE = '\033[38;2;213;168;94m'
     CLAUDE_BG = '\033[48;2;213;168;94m'
 
-    # Magenta/Purple 主色调（Leader Agent 品牌色）
+    # Magenta/Purple 主色调（FishPool 品牌色）
     PRIMARY = '\033[38;2;180;80;255m'       # 紫色主色
     PRIMARY_BRIGHT = '\033[38;2;200;120;255m'
     PRIMARY_BG = '\033[48;2;180;80;255m'
@@ -863,11 +863,11 @@ def build_prompt_with_label(label: str = "You") -> str:
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# 对 LeaderAgent 友好的状态显示
+# 对 FishPool 友好的状态显示
 # ═══════════════════════════════════════════════════════════════════════
 
 def print_leader_status_line(agent_name: str, status_icon: str, description: str) -> None:
-    """打印 LeaderAgent 的状态行
+    """打印 FishPool 的状态行
 
     Args:
         agent_name: Agent 名称
@@ -878,7 +878,7 @@ def print_leader_status_line(agent_name: str, status_icon: str, description: str
 
 
 def print_leader_info_line(key: str, value: str, key_color: str = "", value_color: str = "") -> None:
-    """打印 LeaderAgent 信息行"""
+    """打印 FishPool 信息行"""
     kc = key_color if key_color else Color.DIM
     vc = value_color if value_color else Color.PRIMARY_BRIGHT
     print(f"  {Color.BRAND}│{Color.RST} {kc}{key}:{Color.RST} {vc}{value}{Color.RST}")

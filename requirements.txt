@@ -1,0 +1,11 @@
+# Leader Agent 依赖清单
+# 实际依赖定义在 AgentSkills/requirements.txt 中
+
+openai>=1.0.0
+python-dotenv>=1.0.0
+pyyaml>=6.0
+fpdf2>=2.8.0
+openpyxl>=3.1.0
+markdown>=3.5.0
+python-docx>=1.1.0
+beautifulsoup4>=4.12.0

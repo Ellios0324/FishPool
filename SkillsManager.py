@@ -1236,7 +1236,7 @@ def _stream_chat_collect(messages: list) -> dict:
 
 
 # ========================================================================
-# 3b. 流式调用 + 实时输出（用于 --task 流式模式，被 LeaderAgent 调用）
+# 3b. 流式调用 + 实时输出（用于 --task 流式模式，被 FishPool 调用）
 # ========================================================================
 
 def _stream_chat_collect_streaming(messages: list) -> dict:
@@ -1244,7 +1244,7 @@ def _stream_chat_collect_streaming(messages: list) -> dict:
 
     与 _stream_chat_collect 的区别：
     - 每收到一个 content chunk，立即用 sys.stdout.write() + flush() 输出
-    - 这样 LeaderAgent 通过 PIPE 读取时可以实时获取到流式内容
+    - 这样 FishPool 通过 PIPE 读取时可以实时获取到流式内容
     """
     stream = client.chat.completions.create(
         model=MODEL,
@@ -1265,7 +1265,7 @@ def _stream_chat_collect_streaming(messages: list) -> dict:
 
         if delta.content:
             content_parts.append(delta.content)
-            # ★★★ 实时输出到 stdout，LeaderAgent 的 Popen 能立即读取 ★★★
+            # ★★★ 实时输出到 stdout，FishPool 的 Popen 能立即读取 ★★★
             sys.stdout.write(delta.content)
             sys.stdout.flush()
 
@@ -1386,11 +1386,11 @@ def stream_chat_with_tools(messages: list) -> dict:
 
 
 # ========================================================================
-# 4. 一键执行模式（被 LeaderAgent 唤醒时使用，流式输出）
+# 4. 一键执行模式（被 FishPool 唤醒时使用，流式输出）
 # ========================================================================
 
 SYSTEM_PROMPT = """
-你是一个专业的 **SkillsManager** —— 技能管理 Agent。
+你是一个专业的 **FishFarmer** —— 技能管理 Agent。
 
 你的职责是管理和维护 AgentSkills 包中的所有技能（工具函数）。
 
@@ -1467,9 +1467,9 @@ AgentSkills/
 def run_one_shot(task: str) -> str:
     """一键执行模式（流式输出）：接收任务描述，调用 LLM + 工具循环，实时流式输出结果
 
-    被 LeaderAgent 通过子进程唤醒时使用，不进入交互式 CLI。
+    被 FishPool 通过子进程唤醒时使用，不进入交互式 CLI。
     所有 AI 输出和工具调用结果都会实时打印到 stdout，
-    LeaderAgent 的 Popen 流式读取后展示给用户。
+    FishPool 的 Popen 流式读取后展示给用户。
 
     Args:
         task: 任务描述
@@ -1538,7 +1538,7 @@ def run_one_shot(task: str) -> str:
 # ========================================================================
 
 def run_agent():
-    """运行 SkillsManager Agent 主循环（带美化 CLI）"""
+    """运行 FishFarmer Agent 主循环（带美化 CLI）"""
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT.strip()}]
 
@@ -1551,13 +1551,13 @@ def run_agent():
     print()
     print_panel(
         content=(
-            f"{Color.BLD}{Color.BCYN}  🧠  SkillsManager{Color.RST}  {Color.BWHT}— 技能管理 Agent{Color.RST}\n\n"
+            f"{Color.BLD}{Color.BCYN}  🧠  FishFarmer{Color.RST}  {Color.BWHT}— 技能管理 Agent{Color.RST}\n\n"
             f"  {Color.BLD}模型:{Color.RST}  {Color.BCYN}{MODEL}{Color.RST}\n"
             f"  {Color.BLD}工具:{Color.RST}  {Color.BGRN}{len(tools)} 个技能可用{Color.RST}\n"
             f"  {Color.BLD}路径:{Color.RST}  {Color.DIM}{AGENT_SKILLS_DIR}{Color.RST}\n\n"
             f"  {Color.HINT}输入 /exit 或 /quit 退出对话{Color.RST}"
         ),
-        title="🚀 SkillsManager",
+        title="🚀 FishFarmer",
         color=Color.SYS,
         width=width,
     )
@@ -1581,7 +1581,7 @@ def run_agent():
             print()
             print()
             print_panel(
-                content=f"{Color.BLD}{Color.BCYN}  🌟 感谢使用 SkillsManager，期待再次相见！{Color.RST}",
+                content=f"{Color.BLD}{Color.BCYN}  🌟 感谢使用 FishFarmer，期待再次相见！{Color.RST}",
                 title="👋 再见",
                 color=Color.SYS,
                 width=width,
@@ -1595,7 +1595,7 @@ def run_agent():
         if user_input.lower() in {"exit", "quit", "/exit", "/quit"} or user_input in {"再见", "退出"}:
             print()
             print_panel(
-                content=f"{Color.BLD}{Color.BCYN}  🌟 感谢使用 SkillsManager，期待再次相见！{Color.RST}",
+                content=f"{Color.BLD}{Color.BCYN}  🌟 感谢使用 FishFarmer，期待再次相见！{Color.RST}",
                 title="👋 再见",
                 color=Color.SYS,
                 width=width,
@@ -1626,7 +1626,7 @@ def run_agent():
 
         # ── Agent 回复（流式） ──
         ts = format_timestamp()
-        print(f"{Color.AGENT}{Color.BLD}┌─ 🤖 SkillsManager @ {ts} ─────────────────{Color.RST}")
+        print(f"{Color.AGENT}{Color.BLD}┌─ 🤖 FishFarmer @ {ts} ─────────────────{Color.RST}")
         print(f"{Color.AGENT}{Color.BLD}│{Color.RST} ", end="", flush=True)
 
         assistant_msg = stream_chat_with_tools(messages)
@@ -1669,7 +1669,7 @@ def run_agent():
 
             # Agent 再次回复
             ts = format_timestamp()
-            print(f"{Color.AGENT}{Color.BLD}┌─ 🤖 SkillsManager @ {ts} ─────────────────{Color.RST}")
+            print(f"{Color.AGENT}{Color.BLD}┌─ 🤖 FishFarmer @ {ts} ─────────────────{Color.RST}")
             print(f"{Color.AGENT}{Color.BLD}│{Color.RST} ", end="", flush=True)
 
             assistant_msg = stream_chat_with_tools(messages)
@@ -1690,7 +1690,7 @@ def run_agent():
 if __name__ == "__main__":
     # 解析命令行参数
     if len(sys.argv) > 1 and sys.argv[1] == "--task":
-        # ── 一键执行模式（被 LeaderAgent 唤醒） ──
+        # ── 一键执行模式（被 FishPool 唤醒） ──
         task = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else ""
         if not task:
             task = sys.stdin.read().strip()

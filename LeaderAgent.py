@@ -1,5 +1,5 @@
 """
-LeaderAgent — 智能调度入口 Agent（Claude Code 风格美化版）
+FishPool — 智能调度入口 Agent（Claude Code 风格美化版）
 
 作为 Agent 系统的「大脑」，职责仅限于三个核心能力：
 
@@ -38,7 +38,7 @@ client = OpenAI(
 )
 
 MODEL = "deepseek-v4-flash"
-AGENT_NAME = "Leader Agent"
+AGENT_NAME = "FishPool"
 VERSION = "2.0.0"
 
 # ─── 项目根目录 ───
@@ -230,17 +230,17 @@ def _run_agent_subprocess(agent_path: Path, agent_name: str, task: str) -> str:
 
 
 def run_coding_agent(task: str) -> str:
-    """🚀 唤醒 CodingAgent 处理编程任务（流式输出）"""
-    return _run_agent_subprocess(CODING_AGENT_PATH, "CodingAgent", task)
+    """🚀 唤醒 KillerWhale 处理编程任务（流式输出）"""
+    return _run_agent_subprocess(CODING_AGENT_PATH, "KillerWhale", task)
 
 
 def run_skills_manager(task: str) -> str:
-    """🚀 唤醒 SkillsManager 处理技能管理任务（流式输出）"""
-    return _run_agent_subprocess(SKILLS_MANAGER_PATH, "SkillsManager", task)
+    """🚀 唤醒 FishFarmer 处理技能管理任务（流式输出）"""
+    return _run_agent_subprocess(SKILLS_MANAGER_PATH, "FishFarmer", task)
 
 
 def run_web_search(task: str) -> str:
-    """🔍 直接联网搜索（集成在 LeaderAgent 内部，无需子进程）"""
+    """🔍 直接联网搜索（集成在 FishPool 内部，无需子进程）"""
     # 注意：这个函数保留作为备用接口，实际搜索通过直接函数调用完成
     return task  # 占位，实际由 LLM 直接调用 smart_search 等函数
 
@@ -251,8 +251,8 @@ def run_modify_agent(task: str) -> str:
 
 
 def run_weather_agent(task: str) -> str:
-    """🚀 唤醒 WeatherAgent 查询天气信息（流式输出）"""
-    return _run_agent_subprocess(WEATHER_AGENT_PATH, "WeatherAgent", task)
+    """🚀 唤醒 Dolphin 查询天气信息（流式输出）"""
+    return _run_agent_subprocess(WEATHER_AGENT_PATH, "Dolphin", task)
 
 
 def launch_sub_agent(agent_name: str) -> str:
@@ -267,10 +267,10 @@ def launch_sub_agent(agent_name: str) -> str:
         启动指引信息
     """
     agent_map = {
-        "codingagent": ("CodingAgent", CODING_AGENT_PATH),
-        "skillsmanager": ("SkillsManager", SKILLS_MANAGER_PATH),
+        "codingagent": ("KillerWhale", CODING_AGENT_PATH),
+        "skillsmanager": ("FishFarmer", SKILLS_MANAGER_PATH),
         "modifyagent": ("ModifyAgent", MODIFY_AGENT_PATH),
-        "weatheragent": ("WeatherAgent", WEATHER_AGENT_PATH),
+        "weatheragent": ("Dolphin", WEATHER_AGENT_PATH),
     }
 
     key = agent_name.lower().replace(" ", "").replace("-", "").replace("_", "")
@@ -300,13 +300,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "run_coding_agent",
-            "description": "【编程任务】启动 CodingAgent 处理代码编写/修改/检查/项目创建等编程任务。适用于：创建Go/Python项目、编写脚本、修改代码、语法检查、运行Shell命令、联网搜索技术方案。任何与代码、编程、开发相关的需求都使用此工具。",
+            "description": "【编程任务】启动 KillerWhale 处理代码编写/修改/检查/项目创建等编程任务。适用于：创建Go/Python项目、编写脚本、修改代码、语法检查、运行Shell命令、联网搜索技术方案。任何与代码、编程、开发相关的需求都使用此工具。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "task": {
                         "type": "string",
-                        "description": "要让 CodingAgent 完成的完整任务描述，包含所有需求细节、文件路径、代码内容等"
+                        "description": "要让 KillerWhale 完成的完整任务描述，包含所有需求细节、文件路径、代码内容等"
                     }
                 },
                 "required": ["task"]
@@ -317,13 +317,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "run_skills_manager",
-            "description": "【技能管理】启动 SkillsManager 管理 AgentSkills 包中的技能。适用于：列出所有技能、查看技能详情、创建新技能、修改技能代码、删除技能、测试技能功能。",
+            "description": "【技能管理】启动 FishFarmer 管理 AgentSkills 包中的技能。适用于：列出所有技能、查看技能详情、创建新技能、修改技能代码、删除技能、测试技能功能。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "task": {
                         "type": "string",
-                        "description": "要让 SkillsManager 完成的技能管理任务描述，包含操作类型和参数"
+                        "description": "要让 FishFarmer 完成的技能管理任务描述，包含操作类型和参数"
                     }
                 },
                 "required": ["task"]
@@ -434,13 +434,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "run_weather_agent",
-            "description": "【天气查询】启动 WeatherAgent 查询天气信息。适用于：查询任意城市未来7天的天气预报、穿衣建议、生活小提示。例如「北京未来7天天气怎么样」「上海明天适合穿什么衣服」「查询东京的天气」等。",
+            "description": "【天气查询】启动 Dolphin 查询天气信息。适用于：查询任意城市未来7天的天气预报、穿衣建议、生活小提示。例如「北京未来7天天气怎么样」「上海明天适合穿什么衣服」「查询东京的天气」等。",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "task": {
                         "type": "string",
-                        "description": "要让 WeatherAgent 完成的天气查询任务描述，包含城市名称"
+                        "description": "要让 Dolphin 完成的天气查询任务描述，包含城市名称"
                     }
                 },
                 "required": ["task"]
@@ -451,13 +451,13 @@ tools = [
         "type": "function",
         "function": {
             "name": "launch_sub_agent",
-            "description": "【交互模式】在独立终端中启动指定子 Agent 的完整交互模式。用于需要多轮深度对话的复杂场景，如逐步调试代码、迭代修改技能、持续查询天气。可选: CodingAgent(编程), SkillsManager(技能管理), ModifyAgent(内容优化), WeatherAgent(天气查询)",
+            "description": "【交互模式】在独立终端中启动指定子 Agent 的完整交互模式。用于需要多轮深度对话的复杂场景，如逐步调试代码、迭代修改技能、持续查询天气。可选: KillerWhale(编程), FishFarmer(技能管理), ModifyAgent(内容优化), Dolphin(天气查询)",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "agent_name": {
                         "type": "string",
-                        "description": "Agent 名称: 'CodingAgent'(编程), 'SkillsManager'(技能管理), 'ModifyAgent'(内容优化), 'WeatherAgent'(天气查询)"
+                        "description": "Agent 名称: 'KillerWhale'(编程), 'FishFarmer'(技能管理), 'ModifyAgent'(内容优化), 'Dolphin'(天气查询)"
                     }
                 },
                 "required": ["agent_name"]
@@ -563,7 +563,7 @@ def stream_chat_with_tools(messages: list) -> dict:
 def build_system_prompt() -> str:
     """构建系统提示词"""
     return """
-你是一个智能的 **Leader Agent** —— Agent 系统的「大脑」和统一入口。
+你是一个智能的 **FishPool** —— Agent 系统的「大脑」和统一入口。
 
 ## 🎯 你的核心职责（只有三件事）
 
@@ -634,10 +634,10 @@ def print_agent_catalog():
 
     # Agent 列表
     items = [
-        f"{Color.BRAND}◆{Color.RST} {Color.BLD}{'CodingAgent':<20}{Color.RST} {Color.BGRN}✓{Color.RST if coding_exists else Color.RED}✗{Color.RST}  {Color.DIM}编程任务 — 代码/项目/Shell/搜索{Color.RST}",
-        f"{Color.BRAND}◆{Color.RST} {Color.BLD}{'SkillsManager':<20}{Color.RST} {Color.BGRN}✓{Color.RST if sm_exists else Color.RED}✗{Color.RST}  {Color.DIM}技能管理 — 查看/创建/修改/删除/测试{Color.RST}",
+        f"{Color.BRAND}◆{Color.RST} {Color.BLD}{'KillerWhale':<20}{Color.RST} {Color.BGRN}✓{Color.RST if coding_exists else Color.RED}✗{Color.RST}  {Color.DIM}编程任务 — 代码/项目/Shell/搜索{Color.RST}",
+        f"{Color.BRAND}◆{Color.RST} {Color.BLD}{'FishFarmer':<20}{Color.RST} {Color.BGRN}✓{Color.RST if sm_exists else Color.RED}✗{Color.RST}  {Color.DIM}技能管理 — 查看/创建/修改/删除/测试{Color.RST}",
         f"{Color.BRAND}◆{Color.RST} {Color.BLD}{'ModifyAgent':<20}{Color.RST} {Color.BGRN}✓{Color.RST if ma_exists else Color.RED}✗{Color.RST}  {Color.DIM}内容优化 — 7受众 × 10格式 × 5语言{Color.RST}",
-        f"{Color.BRAND}◆{Color.RST} {Color.BLD}{'WeatherAgent':<20}{Color.RST} {Color.BGRN}✓{Color.RST if wa_exists else Color.RED}✗{Color.RST}  {Color.DIM}天气查询 — 预报/穿衣建议/life tips{Color.RST}",
+        f"{Color.BRAND}◆{Color.RST} {Color.BLD}{'Dolphin':<20}{Color.RST} {Color.BGRN}✓{Color.RST if wa_exists else Color.RED}✗{Color.RST}  {Color.DIM}天气查询 — 预报/穿衣建议/life tips{Color.RST}",
     ]
 
     for item in items:
@@ -658,7 +658,7 @@ def print_agent_catalog():
 
 
 def run_agent():
-    """运行 LeaderAgent 主循环（Claude Code 风格美化版）
+    """运行 FishPool 主循环（Claude Code 风格美化版）
 
     Ctrl+C 行为：
     - 在提示符处按下 Ctrl+C → 退出程序
@@ -827,7 +827,7 @@ def _print_goodbye_banner():
 
     print()
     print(f"  {Color.BRAND}{sep * (width - 4)}{Color.RST}")
-    print(f"  {Color.BRAND}{Color.BLD}  👋 感谢使用 Leader Agent，期待再次相见！{Color.RST}")
+    print(f"  {Color.BRAND}{Color.BLD}  👋 感谢使用 FishPool，期待再次相见！{Color.RST}")
     print(f"  {Color.DIM}  {format_full_timestamp()}{Color.RST}")
     print(f"  {Color.BRAND}{sep * (width - 4)}{Color.RST}")
     print()
@@ -847,14 +847,14 @@ def _print_interrupt_banner():
 
 
 def _print_status():
-    """打印 LeaderAgent 系统状态和可用 Agent"""
+    """打印 FishPool 系统状态和可用 Agent"""
     width = min(get_term_width() - 2, 80)
     width = max(width, 50)
 
     lines = []
 
     # ── Agent 状态 ──
-    lines.append(f"  {Color.BLD}{Color.BRAND}🤖 Leader Agent 状态{Color.RST}")
+    lines.append(f"  {Color.BLD}{Color.BRAND}🤖 FishPool 状态{Color.RST}")
     lines.append(f"  {Color.BRAND}│{Color.RST} {Color.BLD}模型:{Color.RST}     {Color.PRIMARY_BRIGHT}{MODEL}{Color.RST}")
     lines.append(f"  {Color.BRAND}│{Color.RST} {Color.BLD}版本:{Color.RST}     {Color.PRIMARY_BRIGHT}v{VERSION}{Color.RST}")
     lines.append(f"  {Color.BRAND}│{Color.RST} {Color.BLD}调度工具:{Color.RST}  {Color.BGRN}{len(tools)} 个{Color.RST}")
@@ -868,10 +868,10 @@ def _print_status():
     wa_avail = f"{Color.BGRN}✅ 可用{Color.RST}" if WEATHER_AGENT_PATH.exists() else f"{Color.RED}❌ 不存在{Color.RST}"
 
     lines.append(f"  {Color.BLD}{Color.BRAND}🤖 可调度的子 Agent{Color.RST}")
-    lines.append(f"  {Color.BRAND}◆{Color.RST} {Color.BLD}CodingAgent:{Color.RST}     {coding_avail}  — 编程/代码/项目/Shell/搜索")
-    lines.append(f"  {Color.BRAND}◆{Color.RST} {Color.BLD}SkillsManager:{Color.RST}   {sm_avail}  — 技能查看/创建/修改/删除/测试")
+    lines.append(f"  {Color.BRAND}◆{Color.RST} {Color.BLD}KillerWhale:{Color.RST}    {coding_avail}  — 编程/代码/项目/Shell/搜索")
+    lines.append(f"  {Color.BRAND}◆{Color.RST} {Color.BLD}FishFarmer:{Color.RST}    {sm_avail}  — 技能查看/创建/修改/删除/测试")
     lines.append(f"  {Color.BRAND}◆{Color.RST} {Color.BLD}ModifyAgent:{Color.RST}     {ma_avail}  — 内容优化/改写/翻译/格式转换")
-    lines.append(f"  {Color.BRAND}◆{Color.RST} {Color.BLD}WeatherAgent:{Color.RST}    {wa_avail}  — 天气查询/预报/穿衣建议/life tips")
+    lines.append(f"  {Color.BRAND}◆{Color.RST} {Color.BLD}Dolphin:{Color.RST}       {wa_avail}  — 天气查询/预报/穿衣建议/life tips")
     lines.append("")
 
     # ── 调度工具列表 ──
@@ -886,7 +886,7 @@ def _print_status():
     content = "\n".join(lines)
     print_panel(
         content=content,
-        title="📊 Leader Agent 状态",
+        title="📊 FishPool 状态",
         color=Color.SYS,
         width=width,
     )
