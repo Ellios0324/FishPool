@@ -52,6 +52,18 @@ AGENT_NAME = "Modify Agent"
 # 项目根目录
 PROJECT_ROOT = Path(__file__).parent
 
+# ─── 导入中文友好的输入模块 ───
+try:
+    sys.path.insert(0, str(PROJECT_ROOT))
+    from cli_input import chinese_input, ExitRequested
+    HAVE_CLI_INPUT = True
+except ImportError:
+    HAVE_CLI_INPUT = False
+    chinese_input = input
+
+    class ExitRequested(BaseException):
+        pass
+
 
 # ═══════════════════════════════════════════════════════════════════════
 # 1. 受众画像定义
@@ -1077,11 +1089,17 @@ def run_agent():
 
     while True:
         try:
-            user_input = input(
-                f"  {Color.BCYN}{Color.BLD}  You{Color.RST} {Color.DIM}>{Color.RST} "
-            ).strip()
+            if HAVE_CLI_INPUT:
+                user_input = chinese_input(
+                    f"  {Color.BCYN}{Color.BLD}  You{Color.RST} {Color.DIM}>{Color.RST} ",
+                    multiline=True,
+                )
+            else:
+                user_input = input(
+                    f"  {Color.BCYN}{Color.BLD}  You{Color.RST} {Color.DIM}>{Color.RST} "
+                ).strip()
 
-        except (EOFError, KeyboardInterrupt):
+        except (ExitRequested, EOFError, KeyboardInterrupt):
             print()
             print_goodbye("  感谢使用 Modify Agent，期待再次相见！")
             break
