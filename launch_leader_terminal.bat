@@ -24,7 +24,7 @@ if errorlevel 1 (
 python -c "import openai" >nul 2>&1
 if errorlevel 1 (
     echo ⚠️ 依赖未安装，正在安装...
-    pip install -r AgentSkills\requirements.txt
+    pip install -r AgentSkills\requirements.txt --break-system-packages
     if errorlevel 1 (
         echo ❌ 依赖安装失败！
         pause
