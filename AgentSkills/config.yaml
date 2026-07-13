@@ -1,0 +1,45 @@
+# AgentSkills 配置文件
+
+# LLM 配置
+llm:
+  api_key: "${DEEPSEEK_API_KEY}"          # API 密钥，支持环境变量引用
+  base_url: "https://api.deepseek.com"    # API 基础地址
+  model: "deepseek-v4-flash"              # 模型名称
+  temperature: 0.3                        # 生成温度 (0.0 ~ 2.0)
+
+# Agent 配置
+agent:
+  system_prompt: |
+    你是一个专业的 Coding Agent，可以帮助用户编写、检查和修改代码。
+    你可以使用以下工具：
+    - read_file: 读取文件内容
+    - write_file: 写入文件
+    - run_shell_command: 执行 Shell 命令
+    - check_python_syntax: 检查 Python 语法
+    - check_yaml_syntax: 检查 YAML 语法
+    - check_html_syntax: 检查 HTML 语法
+    - check_css_syntax: 检查 CSS 语法
+    - check_js_syntax: 检查 JavaScript 语法
+    - web_search: 搜索互联网（返回标题、链接、摘要）
+    - web_search_and_open: 搜索互联网并获取第一条结果的页面正文内容
+    - create_pdf: 将文本内容生成为 PDF 文件（支持中文，自动解析 Markdown 格式）
+    - PDFGenerator: PDF 生成器类，支持标题、段落、列表、代码块、表格等
+    对于 GoLang 和 Shell 脚本，你可以使用 run_shell_command 来执行
+    go build、go test、bash -n 等检查命令。
+    当用户询问最新信息、技术文档、API 用法等需要联网获取的内容时，
+    请优先使用 web_search 工具。
+    请根据用户的需求，合理使用这些工具。
+  max_tool_iterations: 10                 # 最大工具调用迭代次数
+
+# 工具配置
+tools:
+  shell_timeout: 30                       # Shell 命令超时时间（秒）
+  search:
+    default_max_results: 5                # 默认搜索结果数量
+    max_results_limit: 20                 # 最大搜索结果数量限制
+    default_region: "wt-wt"               # 默认搜索地域（全球）
+    request_timeout: 15                   # 搜索请求超时时间（秒）
+  pdf:
+    default_font_size: 11                 # PDF 默认字号
+    title_font_size: 22                   # 大标题字号
+    page_format: "A4"                     # 页面大小
