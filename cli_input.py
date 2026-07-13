@@ -12,6 +12,7 @@ cli_input — 中文友好的 CLI 输入模块 (Cross-platform)
 - ✅ 光标位置正确识别中文字符宽度（2列 vs 1列）
 - ✅ 支持历史记录、Tab补全等高级功能
 - ✅ 支持 ANSI 转义码渲染（彩色提示符）
+- ✅ Alt+Enter 多行输入，Enter 提交（自定义按键绑定）
 
 ## 回退方案
 
@@ -26,6 +27,7 @@ cli_input — 中文友好的 CLI 输入模块 (Cross-platform)
 import os
 import sys
 import re
+import shutil
 import textwrap
 from typing import Optional, List, Callable
 
@@ -39,6 +41,30 @@ try:
 except ImportError:
     HAVE_PROMPT_TOOLKIT = False
     ANSIFormattedText = None  # type: ignore
+
+
+# ========================================================================
+# 自定义按键绑定（多行模式）
+# ========================================================================
+
+def _get_multiline_key_bindings():
+    """为多行模式创建自定义按键绑定：
+    - Enter → 提交输入
+    - Alt+Enter → 插入换行
+    """
+    kb = KeyBindings()
+
+    @kb.add('enter')
+    def _(event):
+        """Enter 提交输入"""
+        event.current_buffer.validate_and_handle()
+
+    @kb.add('escape', 'enter')
+    def _(event):
+        """Alt+Enter 插入换行"""
+        event.current_buffer.insert_text('\n')
+
+    return kb
 
 
 # ========================================================================
@@ -69,37 +95,74 @@ def _clear_line():
     sys.stdout.flush()
 
 
+def _clear_lines(count: int):
+    """向上清除指定行数
+
+    从当前行开始，向上逐行清除。
+    适用于终端中内容换行到多行后的清除。
+
+    Args:
+        count: 要清除的行数
+    """
+    if count <= 0:
+        return
+
+    # 先清除当前行
+    sys.stdout.write('\r\033[K')
+
+    # 如果有多行，向上逐行清除
+    for _ in range(count - 1):
+        sys.stdout.write('\033[F')  # 光标上移一行
+        sys.stdout.write('\033[K')  # 清除该行
+
+    sys.stdout.flush()
+
+
 def _render_input_line(prompt: str, buffer: str, cursor_pos: int):
     """重新渲染输入行（含 ANSI 提示符 + 输入缓冲区 + 光标位置）
+
+    正确处理多行内容换行显示问题：
+    - 当内容超出一行时，清除所有占用的行后重新绘制
+    - 光标位置正确计算
 
     Args:
         prompt: 提示文本（可能含 ANSI 转义码）
         buffer: 当前输入缓冲区内容
         cursor_pos: 光标在缓冲区中的位置（字符索引）
     """
-    # 计算输入缓冲区中光标前的可见宽度
+    # 获取终端宽度
+    term_width = shutil.get_terminal_size().columns
+
+    # 计算提示符的可见宽度
+    prompt_visible = re.sub(r'\033\[[0-9;]*m', '', prompt)
+    prompt_width = len(prompt_visible)
+
+    # 计算缓冲区内容的可见宽度
+    buffer_visible_width = _get_string_visual_width(buffer)
+
+    # 计算光标前的可见宽度
     before_cursor = buffer[:cursor_pos]
     before_width = _get_string_visual_width(before_cursor)
 
-    # 计算完整的可见宽度
-    buffer_visible_width = _get_string_visual_width(buffer)
+    # 计算总可见宽度（提示符 + 缓冲区）
+    total_visible_width = prompt_width + buffer_visible_width
 
-    # 清空当前行
-    _clear_line()
+    # 计算占用的行数（从当前光标行开始算）
+    # 第一行已经包含了提示符，提示符可能已经占了一定的空间
+    occupied_lines = max(1, (total_visible_width + term_width - 1) // term_width)
 
-    # 输出提示符 + 缓冲区内容
+    # 清除所有占用的行
+    _clear_lines(occupied_lines)
+
+    # 重新输出提示符 + 缓冲区内容
     sys.stdout.write(f"{prompt}{buffer}")
 
-    # 计算需要回退的列数：
-    # 光标应该位于 "提示符 + 光标前内容" 的位置
-    # 总输出长度 = prompt_visible_width + buffer_visible_width
-    # 光标位置 = prompt_visible_width + before_width
-    # 需要回退的宽度 = 总输出宽度 - 光标列位置
-    prompt_visible = re.sub(r'\033\[[0-9;]*m', '', prompt)
-    prompt_width = len(prompt_visible)
-    after_width = buffer_visible_width - before_width
+    # 计算光标位置
+    # 光标应该在 "提示符 + 光标前内容" 的后面
+    cursor_visual_pos = prompt_width + before_width
 
-    # 回退到光标位置
+    # 如果有内容在光标之后，需要回退到光标位置
+    after_width = buffer_visible_width - before_width
     if after_width > 0:
         sys.stdout.write('\b' * after_width)
 
@@ -319,11 +382,10 @@ def _raw_input_fallback(prompt: str = "") -> str:
                         pass
                     elif seq == '\x1b[B':  # ↓ 下箭头（忽略）
                         pass
-                    elif seq == '\x1b[3':  # Delete 键
+                    elif seq == '\x1b[3':  # Delete 键（删除光标后的字符）
                         more = sys.stdin.read(1)
                         if more == '~' and cursor_pos < len(buffer):
-                            buffer = (buffer[:cursor_pos] +
-                                      buffer[cursor_pos + 1:])
+                            buffer = buffer[:cursor_pos] + buffer[cursor_pos + 1:]
                             _render_input_line(prompt, buffer, cursor_pos)
                     elif seq == '\x1b[1':  # Home (xterm)
                         more = sys.stdin.read(1)
@@ -434,14 +496,14 @@ def chinese_input(
     - 光标位置正确计算
     - 支持历史记录（上下方向键浏览）[prompt_toolkit]
     - 支持密码模式（输入不回显）[prompt_toolkit]
-    - 支持多行输入 [prompt_toolkit]
+    - 支持多行输入，Alt+Enter 换行，Enter 提交 [prompt_toolkit]
     - 支持 ANSI 转义码（彩色提示符）
 
     Args:
         prompt: 提示文本（支持 ANSI 转义码）
         password: 是否密码模式（输入不回显）
         default: 默认值
-        multiline: 是否支持多行输入
+        multiline: 是否支持多行输入（Alt+Enter 换行，Enter 提交）
 
     Returns:
         用户输入的字符串
@@ -473,9 +535,11 @@ def chinese_input(
         formatted_prompt = _format_prompt(prompt)
 
         if multiline:
+            kb = _get_multiline_key_bindings()
             user_input = session.prompt(
                 formatted_prompt,
                 multiline=True,
+                key_bindings=kb,
             )
         elif password:
             user_input = session.prompt(
@@ -625,6 +689,12 @@ def test_chinese_input():
     print("\n📝 测试 6: ANSI 彩色提示符")
     text6 = chinese_input("\033[96m\033[1m💬 You\033[0m \033[2m>\033[0m ")
     print(f"  输入内容: [{text6}]")
+
+    print("\n📝 测试 7: 多行输入（Alt+Enter 换行，Enter 提交）")
+    print("  按 Alt+Enter 换行，按 Enter 提交")
+    text7 = chinese_input("  >> ", multiline=True)
+    print(f"  输入内容: [{text7}]")
+    print(f"  行数: {text7.count(chr(10)) + 1}")
 
     print("\n" + "=" * 60)
     print("  ✅ 测试完成")

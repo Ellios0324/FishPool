@@ -682,7 +682,7 @@ def run_agent():
         try:
             # ── Claude Code 风格用户输入提示 ──
             prompt = build_prompt_with_label("You")
-            user_input = chinese_input(prompt)
+            user_input = chinese_input(prompt, multiline=True)
 
         except ExitRequested:
             # ── 场景 1：在提示符处按下 Ctrl+C → 退出程序 ──
