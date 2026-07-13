@@ -1,5 +1,5 @@
-# Leader Agent 依赖清单
-# 实际依赖定义在 AgentSkills/requirements.txt 中
+# FishPool 依赖清单
+# 安装: pip install -r requirements.txt
 
 openai>=1.0.0
 python-dotenv>=1.0.0
@@ -9,3 +9,4 @@ openpyxl>=3.1.0
 markdown>=3.5.0
 python-docx>=1.1.0
 beautifulsoup4>=4.12.0
+prompt-toolkit>=3.0.0
