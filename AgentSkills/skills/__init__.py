@@ -1,5 +1,6 @@
 """
-工具模块 - 提供文件操作、Shell 执行、语法检查、联网搜索、PDF生成、项目构建、Git操作等基础工具
+工具模块 - 提供文件操作、Shell 执行、语法检查、联网搜索、PDF生成、项目构建、
+Git操作、语雀知识库、腾讯IMA知识库等基础工具
 """
 
 from .file_ops import (
@@ -67,6 +68,38 @@ from .weather_tool import (
 from .modify_tool import (
     run_modify_agent,
 )
+from .c_project import (
+    create_c_project,
+    debug_c_project,
+    add_c_module,
+)
+from .cpp_project import (
+    create_cpp_project,
+    debug_cpp_project,
+    add_cpp_module,
+)
+from .csharp_project import (
+    create_csharp_project,
+    debug_csharp_project,
+    add_csharp_module,
+)
+# ── 语雀知识库 ──
+from .yuque_kb import (
+    yuque_list_repos,
+    yuque_get_toc,
+    yuque_list_docs,
+    yuque_get_doc_content,
+    yuque_search_docs,
+    yuque_ask,
+)
+# ── 腾讯IMA知识库 ──
+from .tencent_kb import (
+    tencent_kb_init,
+    tencent_kb_list_databases,
+    tencent_kb_search,
+    tencent_kb_ask,
+    tencent_kb_status,
+)
 
 __all__ = [
     # 文件操作
@@ -128,4 +161,29 @@ __all__ = [
     "run_weather_agent",
     # Modify Agent
     "run_modify_agent",
+    # C 项目
+    "create_c_project",
+    "debug_c_project",
+    "add_c_module",
+    # C++ 项目
+    "create_cpp_project",
+    "debug_cpp_project",
+    "add_cpp_module",
+    # C# 项目
+    "create_csharp_project",
+    "debug_csharp_project",
+    "add_csharp_module",
+    # ── 语雀知识库 ──
+    "yuque_list_repos",
+    "yuque_get_toc",
+    "yuque_list_docs",
+    "yuque_get_doc_content",
+    "yuque_search_docs",
+    "yuque_ask",
+    # ── 腾讯IMA知识库 ──
+    "tencent_kb_init",
+    "tencent_kb_list_databases",
+    "tencent_kb_search",
+    "tencent_kb_ask",
+    "tencent_kb_status",
 ]

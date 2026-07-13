@@ -287,7 +287,7 @@ def fetch_weather_wttr(city_name):
     """通过 wttr.in API 获取天气数据"""
     url = f"https://wttr.in/{city_name}?format=j1&lang=zh"
     headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; WeatherAgent/1.0)",
+        "User-Agent": "Mozilla/5.0 (compatible; Dolphin/1.0)",
         "Accept": "application/json",
     }
 
@@ -375,7 +375,7 @@ def fetch_weather_fallback(city_name):
         f"https://geocoding-api.open-meteo.com/v1/search?"
         f"name={city_name}&count=5&language=zh&format=json"
     )
-    headers = {"User-Agent": "WeatherAgent/1.0"}
+    headers = {"User-Agent": "Dolphin/1.0"}
 
     try:
         geo_resp = requests.get(geo_url, headers=headers, timeout=10)
@@ -540,7 +540,7 @@ def print_banner():
     """打印欢迎横幅"""
     banner = r"""
     ╔══════════════════════════════════╗
-    ║        🌤  WeatherAgent          ║
+    ║        🐬  Dolphin               ║
     ║      智能天气助手 v1.0            ║
     ╚══════════════════════════════════╝
     """
@@ -687,7 +687,7 @@ def run_task(task_text):
 def main():
     """主函数：支持 --task 命令行模式和交互式模式"""
     parser = argparse.ArgumentParser(
-        description="🌤  WeatherAgent - 智能天气助手",
+        description="🐬  Dolphin - 智能天气助手",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "示例:\n"
@@ -728,7 +728,7 @@ def main():
 
             # 退出命令
             if user_input.lower() in ("exit", "quit", "q"):
-                print("👋 感谢使用 WeatherAgent，再见！")
+                print("👋 感谢使用 Dolphin，再见！")
                 break
 
             # 清屏命令

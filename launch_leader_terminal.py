@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-launch_leader_terminal.py — 🚀 LeaderAgent 交互式终端启动器
+launch_leader_terminal.py — 🚀 FishPool 交互式终端启动器
 
 一个跨平台的交互式菜单启动器，基于 cli_style 模块的美化风格，
-提供多种启动选项，让用户可以选择启动 LeaderAgent 或直接进入某个子 Agent。
+提供多种启动选项，让用户可以选择启动 FishPool 或直接进入某个子 Agent。
 
 ✅ 中文输入修复：使用 cli_input 模块替代原生 input()，
    解决退格键需按两次、方向键导航异常等中文输入问题。
@@ -14,15 +14,15 @@ launch_leader_terminal.py — 🚀 LeaderAgent 交互式终端启动器
 
 使用方法：
     python launch_leader_terminal.py          # 交互式菜单
-    python launch_leader_terminal.py --direct  # 直接启动 LeaderAgent（跳过菜单）
-    python launch_leader_terminal.py --agent CodingAgent  # 直接启动指定子 Agent
+    python launch_leader_terminal.py --direct  # 直接启动 FishPool（跳过菜单）
+    python launch_leader_terminal.py --agent KillerWhale  # 直接启动指定子 Agent
 
 支持的子 Agent 直连：
-    1. CodingAgent     — 编程任务
-    2. SkillsManager   — 技能管理
-    3. SearchingAgent  — 联网搜索
-    4. ModifyAgent     — 内容优化
-    5. WeatherAgent    — 天气查询
+    1. KillerWhale    — 编程任务
+    2. FishFarmer     — 技能管理
+    3. SearchingAgent — 联网搜索
+    4. ModifyAgent    — 内容优化
+    5. Dolphin        — 天气查询
 """
 
 import os
@@ -153,7 +153,7 @@ except ImportError:
         print()
         print_panel(
             content=f"  {Color.BLD}{Color.BCYN}{title}{Color.RST}",
-            title="🚀 LeaderAgent",
+            title="🚀 FishPool",
             color=Color.SYS,
         )
         print()
@@ -192,7 +192,7 @@ except ImportError:
 
 AGENTS = {
     "1": {
-        "name": "LeaderAgent",
+        "name": "FishPool",
         "file": "LeaderAgent.py",
         "description": "🚀 启动交互模式（完整 CLI 对话）",
         "icon": "🚀",
@@ -200,7 +200,7 @@ AGENTS = {
         "direct": True,
     },
     "2": {
-        "name": "CodingAgent",
+        "name": "KillerWhale",
         "file": "CodingAgent.py",
         "description": "💻 编程任务（代码编写/修改/检查/项目创建）",
         "icon": "💻",
@@ -208,7 +208,7 @@ AGENTS = {
         "direct": True,
     },
     "3": {
-        "name": "SkillsManager",
+        "name": "FishFarmer",
         "file": "SkillsManager.py",
         "description": "🔧 技能管理（查看/创建/修改/删除/测试）",
         "icon": "🔧",
@@ -232,7 +232,7 @@ AGENTS = {
         "direct": True,
     },
     "6": {
-        "name": "WeatherAgent",
+        "name": "Dolphin",
         "file": "WeatherAgent.py",
         "description": "🌤️ 天气查询（预报/穿衣建议/生活小提示）",
         "icon": "🌤️",
@@ -437,13 +437,13 @@ def show_help() -> None:
         f"  {Color.BGRN}c{Color.RST}      清屏",
         f"",
         f"  {Color.BLD}命令行参数:{Color.RST}",
-        f"  {Color.DIM}--direct{Color.RST}    直接启动 LeaderAgent（跳过菜单）",
+        f"  {Color.DIM}--direct{Color.RST}    直接启动 FishPool（跳过菜单）",
         f"  {Color.DIM}--agent NAME{Color.RST} 直接启动指定子 Agent",
         f"  {Color.DIM}--status{Color.RST}    显示系统状态并退出",
         f"  {Color.DIM}--help{Color.RST}      显示此帮助信息",
         f"",
         f"  {Color.HINT}示例: python launch_leader_terminal.py --direct{Color.RST}",
-        f"  {Color.HINT}示例: python launch_leader_terminal.py --agent CodingAgent{Color.RST}",
+        f"  {Color.HINT}示例: python launch_leader_terminal.py --agent KillerWhale{Color.RST}",
     ]
 
     content = "\n".join(lines)
@@ -467,7 +467,7 @@ def build_menu_content() -> str:
     width = max(width, 50)
 
     # 标题区
-    lines.append(f"  {Color.BLD}{Color.BCYN}🧠  LeaderAgent — 智能 Agent 调度大脑{Color.RST}")
+    lines.append(f"  {Color.BLD}{Color.BCYN}🧠  FishPool — 智能 Agent 调度大脑{Color.RST}")
     lines.append(f"  {Color.DIM}拆分需求 · 分配任务 · 唤醒执行（流式输出）{Color.RST}")
     lines.append("")
 
@@ -531,7 +531,7 @@ def show_menu() -> Optional[str]:
     print()
     print_panel(
         content=menu_content,
-        title="🧠 LeaderAgent 终端启动器",
+        title="🧠 FishPool 终端启动器",
         color=Color.TITLE,
         width=width,
     )
@@ -594,7 +594,7 @@ def run_interactive_launcher():
     ]
 
     print_welcome(
-        title="🧠  LeaderAgent 终端启动器",
+        title="🧠  FishPool 终端启动器",
         subtitle="选择一个 Agent，在新终端窗口中启动完整 CLI 交互",
         extra_info=welcome_extra,
     )
@@ -650,10 +650,10 @@ def run_interactive_launcher():
                     sys.exit(0)
                 continue
 
-            # 检查 LeaderAgent 是否有 .env 依赖
+            # 检查 FishPool 是否有 .env 依赖
             if choice == "1" and not env_ok:
                 print()
-                print_status("⚠️  LeaderAgent 需要有效的 API Key 才能运行！", "warning")
+                print_status("⚠️  FishPool 需要有效的 API Key 才能运行！", "warning")
                 print(f"  {Color.DIM}请先在 .env 文件中配置 DEEPSEEK_API_KEY{Color.RST}")
                 print()
                 print(f"  {Color.HINT}按 Enter 键返回主菜单...{Color.RST}")
@@ -688,10 +688,10 @@ def run_interactive_launcher():
 
 
 def run_direct(agent_name: Optional[str] = None):
-    """直接启动指定的 Agent 或默认启动 LeaderAgent
+    """直接启动指定的 Agent 或默认启动 FishPool
 
     Args:
-        agent_name: Agent 名称（可选），None 则启动 LeaderAgent
+        agent_name: Agent 名称（可选），None 则启动 FishPool
     """
     python_cmd = find_python()
 
@@ -711,7 +711,7 @@ def run_direct(agent_name: Optional[str] = None):
         print(f"   可用选项: {available}")
         sys.exit(1)
     else:
-        # 默认启动 LeaderAgent
+        # 默认启动 FishPool
         launch_agent("1", python_cmd)
 
 
@@ -722,13 +722,13 @@ def run_direct(agent_name: Optional[str] = None):
 def main():
     """主入口"""
     parser = argparse.ArgumentParser(
-        description="🚀 LeaderAgent 终端启动器 — 交互式菜单启动 Agent CLI",
+        description="🚀 FishPool 终端启动器 — 交互式菜单启动 Agent CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
   %(prog)s                         # 交互式菜单
-  %(prog)s --direct                # 直接启动 LeaderAgent
-  %(prog)s --agent CodingAgent     # 直接启动指定子 Agent
+  %(prog)s --direct                # 直接启动 FishPool
+  %(prog)s --agent KillerWhale     # 直接启动指定子 Agent
   %(prog)s --status                # 显示系统状态
         """,
     )
@@ -736,14 +736,14 @@ def main():
     parser.add_argument(
         "--direct", "-d",
         action="store_true",
-        help="直接启动 LeaderAgent（跳过交互菜单）",
+        help="直接启动 FishPool（跳过交互菜单）",
     )
     parser.add_argument(
         "--agent", "-a",
         type=str,
         default=None,
         metavar="NAME",
-        help="直接启动指定的 Agent（如 CodingAgent, SkillsManager 等）",
+        help="直接启动指定的 Agent（如 KillerWhale, FishFarmer 等）",
     )
     parser.add_argument(
         "--status", "-s",

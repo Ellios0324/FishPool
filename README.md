@@ -26,16 +26,6 @@
 
 ---
 
-> 🧭 **给第一次使用命令行的朋友**
->
-> 本教程会用到一些终端命令，别担心——我们会一步步告诉您怎么做！
-> - **终端/Terminal**：就是一个黑色的输入命令的窗口
-> - **💻 Windows**：按 `Win+R` → 输入 `cmd` → 回车
-> - **🍎 macOS**：按 `Command+空格` → 搜索"终端" → 回车
-> - **🐧 Linux**：按 `Ctrl+Alt+T`
-
----
-
 ## 📋 前置条件（请先准备好这些）
 
 ### 1️⃣ Python 3.9 或更高版本
@@ -112,15 +102,15 @@
 
 ### 第 1 步：解压文件
 
-找到下载的 `FishPool.zip` 压缩包。
+找到下载的 `project.zip` 压缩包。
 
 - **右键点击** → **"全部解压缩"**（Windows 自带）
 - 或者用 7-Zip / WinRAR 解压
-- 解压后会得到一个名为 `FishPool` 的文件夹
+- 解压后会得到一个名为 `project` 的文件夹
 
 ### 第 2 步：运行 🎉
 
-进入 `FishPool` 文件夹，您有两种选择：
+进入 `project` 文件夹，您有两种选择：
 
 #### 🆕 方式一：一键安装启动（推荐首次使用）
 
@@ -147,14 +137,12 @@
 
 ### 第 1 步：解压文件
 
-找到下载的 `FishPool.zip` 压缩包，**双击**即可自动解压。
-解压后会得到一个名为 `FishPool` 的文件夹。
+找到下载的 `project.zip` 压缩包，**双击**即可自动解压。
+解压后会得到一个名为 `project` 的文件夹。
 
 ### 第 2 步：运行 🎉
 
-打开终端后，**先进入项目文件夹**。可以输入 `cd `（注意后面有空格），然后把 `FishPool` 文件夹从访达拖到终端窗口，按回车即可。
-
-进入 `FishPool` 文件夹后，您有两种选择：
+进入 `project` 文件夹，打开**终端（Terminal）**，您有两种选择：
 
 #### 🆕 方式一：一键安装启动（推荐首次使用）
 
@@ -162,9 +150,21 @@
 bash install.sh
 ```
 
+或者先设置执行权限再运行：
+
+```bash
+chmod +x install.sh
+./install.sh
+```
+
 #### ⚡ 方式二：快速启动（已安装过依赖）
 
-直接双击 `launch_leader_terminal.command` 文件即可启动。
+```bash
+chmod +x launch_leader_terminal.command
+./launch_leader_terminal.command
+```
+
+或者直接双击 `launch_leader_terminal.command` 文件。
 
 > 双击 .command 文件时，如果提示"无法打开，因为无法验证开发者"，
 > 请右键点击 → **打开方式** → **终端**（Terminal）。
@@ -189,15 +189,15 @@ bash install.sh
 cd ~/Downloads
 
 # 解压
-unzip FishPool.zip -d FishPool
+unzip project.zip -d project
 
 # 进入项目目录
-cd FishPool
+cd project
 ```
 
 ### 第 2 步：运行 🎉
 
-进入 `FishPool` 文件夹，您有两种选择：
+进入 `project` 文件夹，您有两种选择：
 
 #### 🆕 方式一：一键安装启动（推荐首次使用）
 
@@ -205,9 +205,17 @@ cd FishPool
 bash install.sh
 ```
 
+或
+
+```bash
+chmod +x install.sh
+./install.sh
+```
+
 #### ⚡ 方式二：快速启动（已安装过依赖）
 
 ```bash
+chmod +x launch_leader_terminal.command
 bash launch_leader_terminal.command
 ```
 
@@ -220,8 +228,6 @@ pip3 install -r AgentSkills/requirements.txt
 # 启动
 python3 LeaderAgent.py
 ```
-
-> 💡 `pip` 是 Python 的"软件管家"，负责安装程序所需的依赖包。上面的命令会用 pip 读取 `requirements.txt` 中的依赖列表，自动下载并安装。
 
 ### 遇到问题？
 
@@ -314,8 +320,7 @@ python3 LeaderAgent.py
 
 ### Q6：提示 "ModuleNotFoundError: No module named 'openai'"
 **答：**
-依赖没有安装成功。`pip` 是 Python 的"软件管家"，负责安装程序所需的依赖包。手动运行以下命令来安装：
-
+依赖没有安装成功。手动运行：
 ```bash
 pip install -r AgentSkills/requirements.txt
 ```

@@ -1,7 +1,7 @@
 """
 Agent 主循环模块
 
-提供 Coding Agent 的主循环逻辑，包括：
+提供 KillerWhale 的主循环逻辑，包括：
 - 系统提示词管理
 - 用户输入处理
 - 工具调用循环
@@ -70,6 +70,31 @@ from ..skills import (
     run_weather_agent,
     # Modify Agent
     run_modify_agent,
+    # C 项目
+    create_c_project,
+    debug_c_project,
+    add_c_module,
+    # C++ 项目
+    create_cpp_project,
+    debug_cpp_project,
+    add_cpp_module,
+    # C# 项目
+    create_csharp_project,
+    debug_csharp_project,
+    add_csharp_module,
+    # ── 语雀知识库 ──
+    yuque_list_repos,
+    yuque_get_toc,
+    yuque_list_docs,
+    yuque_get_doc_content,
+    yuque_search_docs,
+    yuque_ask,
+    # ── 腾讯IMA知识库 ──
+    tencent_kb_init,
+    tencent_kb_list_databases,
+    tencent_kb_search,
+    tencent_kb_ask,
+    tencent_kb_status,
 )
 from .llm_client import LLMClient
 
@@ -134,6 +159,31 @@ TOOL_FUNCTIONS = {
     "run_weather_agent": run_weather_agent,
     # Modify Agent
     "run_modify_agent": run_modify_agent,
+    # C 项目
+    "create_c_project": create_c_project,
+    "debug_c_project": debug_c_project,
+    "add_c_module": add_c_module,
+    # C++ 项目
+    "create_cpp_project": create_cpp_project,
+    "debug_cpp_project": debug_cpp_project,
+    "add_cpp_module": add_cpp_module,
+    # C# 项目
+    "create_csharp_project": create_csharp_project,
+    "debug_csharp_project": debug_csharp_project,
+    "add_csharp_module": add_csharp_module,
+    # ── 语雀知识库 ──
+    "yuque_list_repos": yuque_list_repos,
+    "yuque_get_toc": yuque_get_toc,
+    "yuque_list_docs": yuque_list_docs,
+    "yuque_get_doc_content": yuque_get_doc_content,
+    "yuque_search_docs": yuque_search_docs,
+    "yuque_ask": yuque_ask,
+    # ── 腾讯IMA知识库 ──
+    "tencent_kb_init": tencent_kb_init,
+    "tencent_kb_list_databases": tencent_kb_list_databases,
+    "tencent_kb_search": tencent_kb_search,
+    "tencent_kb_ask": tencent_kb_ask,
+    "tencent_kb_status": tencent_kb_status,
 }
 
 # ── 工具定义（JSON Schema）──
@@ -980,7 +1030,7 @@ TOOLS_SCHEMA = [
                     },
                     "author": {
                         "type": "string",
-                        "description": "作者（元数据，默认'LeaderAgent'）"
+                        "description": "作者（元数据，默认'KillerWhale'）"
                     }
                 },
                 "required": ["content", "output_path"]
@@ -1151,7 +1201,7 @@ TOOLS_SCHEMA = [
         "type": "function",
         "function": {
             "name": "run_weather_agent",
-            "description": "🌤️ WeatherAgent — 天气查询助手。接收包含城市名称的任务描述，通过联网搜索获取天气信息，返回格式化的天气报告（包含温度、状况、湿度、风力、生活小提示等）。",
+            "description": "🌤️ Dolphin — 天气查询助手。接收包含城市名称的任务描述，通过联网搜索获取天气信息，返回格式化的天气报告（包含温度、状况、湿度、风力、生活小提示等）。",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -1182,11 +1232,367 @@ TOOLS_SCHEMA = [
             }
         }
     },
+    # ═══════════ C 项目 ═══════════
+    {
+        "type": "function",
+        "function": {
+            "name": "create_c_project",
+            "description": "创建标准 C 语言项目结构。支持 console(控制台)、library(库)、sdl(SDL图形) 三种类型。自动生成 src/main.c、include/、Makefile、.gitignore、README.md。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_name": {
+                        "type": "string",
+                        "description": "项目名称（也是根目录名）"
+                    },
+                    "project_type": {
+                        "type": "string",
+                        "description": "项目类型：'console'(控制台,默认), 'library'(库), 'sdl'(SDL图形)",
+                        "enum": ["console", "library", "sdl"]
+                    }
+                },
+                "required": ["project_name"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "debug_c_project",
+            "description": "调试 C 项目。检查 Makefile、检测 gcc 编译器、尝试编译 (make/gcc)、分析编译错误并给出修复建议。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "项目根目录路径"
+                    }
+                },
+                "required": ["project_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_c_module",
+            "description": "在 C 项目中添加新模块。自动创建对应的 .c 和 .h 文件，包括头文件保护、初始化/清理函数框架，并更新 Makefile。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "项目根目录路径"
+                    },
+                    "module_name": {
+                        "type": "string",
+                        "description": "模块名称（将创建 module_name.c 和 module_name.h）"
+                    }
+                },
+                "required": ["project_path", "module_name"]
+            }
+        }
+    },
+    # ═══════════ C++ 项目 ═══════════
+    {
+        "type": "function",
+        "function": {
+            "name": "create_cpp_project",
+            "description": "创建标准 C++ 项目结构。支持 console(控制台)、library(库)、sdl(SDL图形)、qt(Qt框架) 四种类型。C++17 标准，自动生成 src/main.cpp、include/、Makefile、.gitignore、README.md。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_name": {
+                        "type": "string",
+                        "description": "项目名称（也是根目录名）"
+                    },
+                    "project_type": {
+                        "type": "string",
+                        "description": "项目类型：'console'(控制台,默认), 'library'(库), 'sdl'(SDL图形), 'qt'(Qt框架)",
+                        "enum": ["console", "library", "sdl", "qt"]
+                    }
+                },
+                "required": ["project_name"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "debug_cpp_project",
+            "description": "调试 C++ 项目。检查 Makefile、检测 g++ 编译器及 C++17 支持、尝试编译、分析编译错误并给出修复建议（模板/继承/覆盖等 C++ 特有错误）。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "项目根目录路径"
+                    }
+                },
+                "required": ["project_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_cpp_module",
+            "description": "在 C++ 项目中添加新模块。自动创建 .hpp 和 .cpp 文件，生成完整的 C++ 类框架（构造函数、析构函数、拷贝/移动禁用、init/name/printInfo 方法）。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "项目根目录路径"
+                    },
+                    "module_name": {
+                        "type": "string",
+                        "description": "模块名称（将创建 PascalCase 类名，文件名为 module_name.hpp 和 module_name.cpp）"
+                    }
+                },
+                "required": ["project_path", "module_name"]
+            }
+        }
+    },
+    # ═══════════ C# 项目 ═══════════
+    {
+        "type": "function",
+        "function": {
+            "name": "create_csharp_project",
+            "description": "创建标准 C# 项目结构。优先使用 dotnet CLI 创建，不可用时手动创建 .csproj 和源代码。支持 console(控制台)、library(类库)、winforms(Windows窗体)、webapi(Web API)。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_name": {
+                        "type": "string",
+                        "description": "项目名称（也是根目录名）"
+                    },
+                    "project_type": {
+                        "type": "string",
+                        "description": "项目类型：'console'(控制台,默认), 'library'(类库), 'winforms'(Windows窗体), 'webapi'(Web API)",
+                        "enum": ["console", "library", "winforms", "webapi"]
+                    }
+                },
+                "required": ["project_name"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "debug_csharp_project",
+            "description": "调试 C# 项目。检测 dotnet CLI 和 SDK 版本、检查 .csproj 和源代码结构、运行 dotnet build、分析编译错误（CS 错误码）并给出修复建议。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "项目根目录路径"
+                    }
+                },
+                "required": ["project_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "add_csharp_module",
+            "description": "在 C# 项目中添加新模块。自动创建 .cs 类文件，自动检测命名空间（从 .csproj 读取 RootNamespace），生成完整的 C# 类框架（构造函数、属性、方法）。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "project_path": {
+                        "type": "string",
+                        "description": "项目根目录路径"
+                    },
+                    "module_name": {
+                        "type": "string",
+                        "description": "类/模块名称（将创建 PascalCase 类名 .cs 文件）"
+                    }
+                },
+                "required": ["project_path", "module_name"]
+            }
+        }
+    },
+    # ═══════════ 语雀知识库 ═══════════
+    {
+        "type": "function",
+        "function": {
+            "name": "yuque_list_repos",
+            "description": "📚 列出语雀知识库列表。获取指定用户（或 Token 对应用户）的所有知识库。需要 YUQUE_TOKEN。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "token_str": {"type": "string", "description": "语雀 API Token（必填，需在 .env 配置 YUQUE_TOKEN）"},
+                    "user_login": {"type": "string", "description": "用户名（可选，默认使用 Token 对应用户）"}
+                },
+                "required": ["token_str"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "yuque_get_toc",
+            "description": "📂 获取语雀知识库目录结构。展示层级目录结构，包含文档标题、层级和 ID。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "token_str": {"type": "string", "description": "语雀 API Token"},
+                    "repo_id": {"description": "知识库 ID（数字或字符串）"}
+                },
+                "required": ["token_str", "repo_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "yuque_list_docs",
+            "description": "📄 列出知识库中所有文档。返回文档标题、更新时间等信息。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "token_str": {"type": "string", "description": "语雀 API Token"},
+                    "repo_id": {"description": "知识库 ID"}
+                },
+                "required": ["token_str", "repo_id"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "yuque_get_doc_content",
+            "description": "📝 获取语雀文档的完整 Markdown 内容。获取指定文档的原始 Markdown 内容，便于阅读或进一步处理。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "token_str": {"type": "string", "description": "语雀 API Token"},
+                    "repo_id": {"description": "知识库 ID"},
+                    "doc_id_or_slug": {"type": "string", "description": "文档 ID（数字）或 Slug（路径名）"}
+                },
+                "required": ["token_str", "repo_id", "doc_id_or_slug"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "yuque_search_docs",
+            "description": "🔍 在语雀知识库中搜索文档。通过获取所有文档标题进行本地关键词匹配搜索。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "token_str": {"type": "string", "description": "语雀 API Token"},
+                    "repo_id": {"description": "知识库 ID"},
+                    "keyword": {"type": "string", "description": "搜索关键词"}
+                },
+                "required": ["token_str", "repo_id", "keyword"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "yuque_ask",
+            "description": "🤔 基于语雀知识库内容回答问题。获取目录和文档列表，关键词匹配找到最相关的文档后获取内容回答用户。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "token_str": {"type": "string", "description": "语雀 API Token"},
+                    "repo_id": {"description": "知识库 ID"},
+                    "question": {"type": "string", "description": "用户的问题"}
+                },
+                "required": ["token_str", "repo_id", "question"]
+            }
+        }
+    },
+    # ═══════════ 腾讯IMA知识库 ═══════════
+    {
+        "type": "function",
+        "function": {
+            "name": "tencent_kb_init",
+            "description": "🔧 初始化 IMA 知识库连接配置。从参数或环境变量中读取 API 网关地址和密钥。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "api_url": {"type": "string", "description": "API 网关地址（可选，默认从 .env 的 TENCENT_KB_API_URL 读取）"},
+                    "api_key": {"type": "string", "description": "API 密钥（可选，默认从 .env 的 TENCENT_KB_API_KEY 读取）"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "tencent_kb_list_databases",
+            "description": "📦 列出 IMA 知识库中的数据库/集合列表。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "api_url": {"type": "string", "description": "API 网关地址（可选）"},
+                    "api_key": {"type": "string", "description": "API 密钥（可选）"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "tencent_kb_search",
+            "description": "🔍 在 IMA 知识库中搜索相关内容。使用 API 网关进行向量或关键词搜索。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "api_url": {"type": "string", "description": "API 网关地址（可选）"},
+                    "api_key": {"type": "string", "description": "API 密钥（可选）"},
+                    "query": {"type": "string", "description": "搜索查询词"},
+                    "top_k": {"type": "integer", "description": "返回结果数量（默认5，范围1-20）"}
+                },
+                "required": ["query"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "tencent_kb_ask",
+            "description": "🤔 基于 IMA 知识库回答问题。先搜索相关内容，再回答用户问题。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "api_url": {"type": "string", "description": "API 网关地址（可选）"},
+                    "api_key": {"type": "string", "description": "API 密钥（可选）"},
+                    "question": {"type": "string", "description": "用户问题"}
+                },
+                "required": ["question"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "tencent_kb_status",
+            "description": "📊 检查 IMA 知识库连接状态和基本信息。检测 API 连接、认证状态和配置信息。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "api_url": {"type": "string", "description": "API 网关地址（可选）"},
+                    "api_key": {"type": "string", "description": "API 密钥（可选）"}
+                },
+                "required": []
+            }
+        }
+    },
 ]
 
 # ── 系统提示词 ──
 SYSTEM_PROMPT = """
-你是一个专业的 Coding Agent，可以帮助用户编写、检查、修改和删除代码项目文件。
+你是一个专业的 KillerWhale，可以帮助用户编写、检查、修改和删除代码项目文件。
 
 ## 📁 文件操作
 - read_file: 读取文件内容
@@ -1233,7 +1639,7 @@ SYSTEM_PROMPT = """
 - convert_md_to_docx: 将 Markdown 文件转换为 Word (.docx) 文档
 - convert_md_content_to_docx: 将 Markdown 文本内容直接转换为 Word (.docx) 文件
 
-## 🌤️ WeatherAgent（天气查询）
+## 🌤️ Dolphin（天气查询）
 - run_weather_agent: 天气查询助手。输入城市名称，返回格式化的天气预报（温度、状况、湿度、风力、生活小提示等）。
 
 ## ✏️ ModifyAgent（内容优化）
@@ -1257,6 +1663,29 @@ SYSTEM_PROMPT = """
 - git_reset: 重置仓库状态
 - git_tag: 标签管理（列出/创建/删除）
 
+## 📚 知识库接入
+
+### 🦜 语雀（Yuque）知识库
+- yuque_list_repos: 📚 列出语雀知识库列表（需要 YUQUE_TOKEN）
+- yuque_get_toc: 📂 获取知识库目录结构
+- yuque_list_docs: 📄 列出知识库中所有文档
+- yuque_get_doc_content: 📝 获取文档的完整 Markdown 内容
+- yuque_search_docs: 🔍 在知识库中搜索文档（关键词匹配标题）
+- yuque_ask: 🤔 基于知识库内容回答问题
+
+使用方式：在 .env 中配置 YUQUE_TOKEN，或在调用时传入 token_str 参数。
+语雀 API Base: https://www.yuque.com/api/v2
+
+### 🧠 腾讯IMA知识库
+- tencent_kb_init: 🔧 初始化 IMA 知识库连接配置
+- tencent_kb_list_databases: 📦 列出数据库/集合列表
+- tencent_kb_search: 🔍 在知识库中搜索相关内容
+- tencent_kb_ask: 🤔 基于知识库回答问题
+- tencent_kb_status: 📊 检查知识库连接状态
+
+使用方式：在 .env 中配置 TENCENT_KB_API_URL 和 TENCENT_KB_API_KEY，
+或在调用时传入 api_url / api_key 参数。
+
 ## 💡 搜索工具选择指南
 - 查普通信息 → web_search（简单快速）
 - 需要看网页内容 → web_search_and_open
@@ -1266,6 +1695,8 @@ SYSTEM_PROMPT = """
 - 搜索图片 → search_images
 - 获取相关搜索词 → search_suggestions
 - 诊断搜索环境 → search_engine_status
+- 查语雀知识库 → yuque_list_repos / yuque_search_docs / yuque_ask
+- 查腾讯IMA知识库 → tencent_kb_search / tencent_kb_ask
 
 ## HTML 项目开发指南
 你可以使用上述工具完整地创建、检查、修改和删除 HTML 项目：
@@ -1275,15 +1706,32 @@ SYSTEM_PROMPT = """
 4. 使用 write_file 修改代码，delete_file 删除不需要的文件
 5. 使用 run_shell_command 启动本地服务器或运行构建工具
 
+## C/C++/C# 项目开发
+### 🅲 C 项目
+- create_c_project: 创建标准 C 项目（console/library/sdl）。生成 src/main.c、include/、Makefile
+- debug_c_project: 调试 C 项目（检查 gcc、编译、分析错误）
+- add_c_module: 添加 C 模块（.c + .h，含初始化/清理函数）
+
+### ➕➕ C++ 项目
+- create_cpp_project: 创建标准 C++ 项目（console/library/sdl/qt）。C++17 标准
+- debug_cpp_project: 调试 C++ 项目（检查 g++、检测 C++17 支持、分析模板/继承错误）
+- add_cpp_module: 添加 C++ 模块（.cpp + .hpp，生成完整类框架）
+
+### #️⃣ C# 项目
+- create_csharp_project: 创建 C# 项目。优先使用 dotnet CLI，支持 console/library/winforms/webapi
+- debug_csharp_project: 调试 C# 项目（检测 dotnet SDK、运行 dotnet build、分析 CS 编译错误）
+- add_csharp_module: 添加 C# 模块（.cs 类文件，自动检测命名空间）
+
 对于 GoLang 和 Shell 脚本，你也可以使用 run_shell_command 来执行 go build、go test、bash -n 等检查命令。
 当用户询问最新信息、技术文档、API 用法等需要联网获取的内容时，请优先使用联网搜索工具。
-需要查天气时，使用 run_weather_agent。需要优化内容时，使用 run_modify_agent。
+需要查天气时，使用 run_weather_agent（Dolphin）。需要优化内容时，使用 run_modify_agent。
+需要查企业内部知识库时，优先使用语雀或腾讯IMA知识库工具。
 请根据用户的需求，合理使用这些工具。
 """
 
 
 class Agent:
-    """Coding Agent 主类"""
+    """KillerWhale 主类"""
 
     def __init__(self, llm_client: LLMClient):
         """初始化 Agent
@@ -1360,7 +1808,7 @@ class Agent:
 
     def run_interactive(self):
         """运行交互式对话模式"""
-        print("🤖 Coding Agent 已启动（流式输出 | 36 个工具 | 支持多引擎搜索 | 支持 HTML 项目开发）")
+        print("🤖 KillerWhale 已启动（流式输出 | 56 个工具 | 支持多引擎搜索 | 支持知识库接入）")
         print("   输入 exit / quit / 再见 退出\n")
 
         EXIT_KEYWORDS = {"exit", "quit", "再见"}
