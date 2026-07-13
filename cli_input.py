@@ -12,7 +12,7 @@ cli_input — 中文友好的 CLI 输入模块 (Cross-platform)
 - ✅ 光标位置正确识别中文字符宽度（2列 vs 1列）
 - ✅ 支持历史记录、Tab补全等高级功能
 - ✅ 支持 ANSI 转义码渲染（彩色提示符）
-- ✅ Shift+Enter 多行输入，Enter 提交（自定义按键绑定）
+- ✅ Alt+Enter 多行输入，Enter 提交（自定义按键绑定）
 
 ## 回退方案
 
@@ -50,7 +50,7 @@ except ImportError:
 def _get_multiline_key_bindings():
     """为多行模式创建自定义按键绑定：
     - Enter → 提交输入
-    - Shift+Enter → 插入换行
+    - Alt+Enter → 插入换行
     """
     kb = KeyBindings()
 
@@ -59,9 +59,9 @@ def _get_multiline_key_bindings():
         """Enter 提交输入"""
         event.current_buffer.validate_and_handle()
 
-    @kb.add('s-enter')
+    @kb.add('escape', 'enter')
     def _(event):
-        """Shift+Enter 插入换行"""
+        """Alt+Enter 插入换行"""
         event.current_buffer.insert_text('\n')
 
     return kb
@@ -496,14 +496,14 @@ def chinese_input(
     - 光标位置正确计算
     - 支持历史记录（上下方向键浏览）[prompt_toolkit]
     - 支持密码模式（输入不回显）[prompt_toolkit]
-    - 支持多行输入，Shift+Enter 换行，Enter 提交 [prompt_toolkit]
+    - 支持多行输入，Alt+Enter 换行，Enter 提交 [prompt_toolkit]
     - 支持 ANSI 转义码（彩色提示符）
 
     Args:
         prompt: 提示文本（支持 ANSI 转义码）
         password: 是否密码模式（输入不回显）
         default: 默认值
-        multiline: 是否支持多行输入（Shift+Enter 换行，Enter 提交）
+        multiline: 是否支持多行输入（Alt+Enter 换行，Enter 提交）
 
     Returns:
         用户输入的字符串
@@ -690,8 +690,8 @@ def test_chinese_input():
     text6 = chinese_input("\033[96m\033[1m💬 You\033[0m \033[2m>\033[0m ")
     print(f"  输入内容: [{text6}]")
 
-    print("\n📝 测试 7: 多行输入（Shift+Enter 换行，Enter 提交）")
-    print("  按 Shift+Enter 换行，按 Enter 提交")
+    print("\n📝 测试 7: 多行输入（Alt+Enter 换行，Enter 提交）")
+    print("  按 Alt+Enter 换行，按 Enter 提交")
     text7 = chinese_input("  >> ", multiline=True)
     print(f"  输入内容: [{text7}]")
     print(f"  行数: {text7.count(chr(10)) + 1}")
