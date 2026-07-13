@@ -57,11 +57,11 @@ if exist AgentSkills\requirements.txt (
     if errorlevel 1 (
         echo    正在安装依赖（首次安装需要一些时间）...
         echo.
-        pip install -r AgentSkills\requirements.txt
+        pip install -r AgentSkills\requirements.txt --break-system-packages
         if errorlevel 1 (
             echo.
             echo ❌ 依赖安装失败，请手动运行：
-            echo    pip install -r AgentSkills\requirements.txt
+            echo    pip install -r AgentSkills\requirements.txt --break-system-package
             echo.
             pause
             exit /b 1
