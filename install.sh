@@ -136,11 +136,11 @@ if [ -f "AgentSkills/requirements.txt" ]; then
     else
         info "正在安装依赖（首次安装需要一些时间）..."
         echo ""
-        $PYTHON_CMD -m pip install -r AgentSkills/requirements.txt
+        $PYTHON_CMD -m pip install -r AgentSkills/requirements.txt --break-system-packages
         if [ $? -ne 0 ]; then
             echo ""
             err "依赖安装失败！"
-            info "请手动运行: $PYTHON_CMD -m pip install -r AgentSkills/requirements.txt"
+            info "请手动运行: $PYTHON_CMD -m pip install -r AgentSkills/requirements.txt --break-system-packages"
             echo ""
             exit 1
         fi
