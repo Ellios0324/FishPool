@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
+from dotenv import load_dotenv
 
 from fishpool.adapters import AdapterManager, BaseAdapter, Message, PlatformType
 from fishpool.adapters.qq_adapter import QQAdapter
@@ -51,6 +52,12 @@ def setup_logging(level: str = "INFO"):
 
 
 # ── 配置加载 ──
+
+# 加载 .env 文件中的环境变量
+# 优先级：.env 文件 > 配置文件 > 默认配置
+_env_loaded = load_dotenv()
+if _env_loaded:
+    print("📂 已加载 .env 环境变量文件")
 
 DEFAULT_CONFIG = {
     "bot": {
@@ -93,7 +100,12 @@ def load_config(config_path: Optional[str] = None) -> dict:
     """
     加载配置文件
 
-    优先级：环境变量 > 配置文件 > 默认配置
+    优先级：环境变量（包括 .env 文件） > 配置文件 > 默认配置
+
+    环境变量通过以下方式加载：
+    1. .env 文件（在模块加载时已通过 load_dotenv() 加载）
+    2. 系统环境变量
+    3. FISHPOOL_ 前缀的变量会覆盖对应配置项
     """
     config = DEFAULT_CONFIG.copy()
 
@@ -120,7 +132,8 @@ def load_config(config_path: Optional[str] = None) -> dict:
                 print(f"📂 加载配置文件: {candidate}")
                 break
 
-    # 2. 环境变量覆盖（ADAPTERS_QQ_WS_URL 等）
+    # 2. 环境变量覆盖（FISHPOOL_ADAPTERS_QQ_WS_URL 等）
+    # .env 文件中的变量已通过 load_dotenv() 加载到 os.environ
     _apply_env_overrides(config)
 
     return config
@@ -139,11 +152,15 @@ def _apply_env_overrides(config: dict, prefix: str = ""):
     """
     从环境变量覆盖配置
 
-    例如：ADAPTERS_QQ_WS_URL → config["adapters"]["qq"]["ws_url"]
+    例如：FISHPOOL_ADAPTERS_QQ_WS_URL → config["adapters"]["qq"]["ws_url"]
 
     支持的环境变量前缀：
     - FISHPOOL_ (默认)
     - 完整路径匹配，如 FISHPOOL_ADAPTERS_QQ_OFFICIAL_APP_ID
+
+    环境变量来源：
+    - 系统环境变量
+    - .env 文件（通过 load_dotenv() 加载）
     """
     if not prefix:
         prefix = "FISHPOOL_"

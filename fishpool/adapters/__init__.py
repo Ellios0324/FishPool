@@ -7,6 +7,7 @@ FishPool 消息适配器模块
 from .message import Message, PlatformType
 from .base import BaseAdapter
 from .manager import AdapterManager
+from .qq_adapter import QQAdapter
 from .qq_official_adapter import QQOfficialAdapter
 
 __all__ = [
@@ -14,5 +15,6 @@ __all__ = [
     "PlatformType",
     "BaseAdapter",
     "AdapterManager",
+    "QQAdapter",
     "QQOfficialAdapter",
 ]

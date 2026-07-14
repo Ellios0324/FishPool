@@ -17,6 +17,12 @@ QQ 官方机器人 API 适配器
 - webhook：通过 HTTP Webhook 接收消息事件（TODO）
 
 协议文档：https://bot.q.qq.com/wiki/develop/api/
+
+WebSocket 连接流程：
+1. 客户端连接 Gateway → 服务器发送 HELLO (OpCode 10)
+2. 客户端发送 IDENTIFY (OpCode 2) 进行鉴权（必须包含 intents）
+3. 服务器回复 READY (OpCode 0, t="READY") → 获得 session_id
+4. 开始监听消息事件
 """
 
 from __future__ import annotations
@@ -24,6 +30,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import platform
 import time
 from typing import Any, Optional
 
@@ -47,9 +54,26 @@ OP_HEARTBEAT_ACK = 11      # 心跳回复
 
 # ── 事件类型 ──
 
+EVENT_READY = "READY"                              # 鉴权成功，获得 session_id
+EVENT_RESUMED = "RESUMED"                          # 连接恢复成功
 EVENT_AT_MESSAGE_CREATE = "AT_MESSAGE_CREATE"            # 群聊 @ 机器人
 EVENT_GROUP_AT_MESSAGE_CREATE = "GROUP_AT_MESSAGE_CREATE"  # 群聊 @（新版）
 EVENT_C2C_MESSAGE_CREATE = "C2C_MESSAGE_CREATE"          # 私聊消息
+EVENT_GROUP_ADD_ROBOT = "GROUP_ADD_ROBOT"                # 机器人被邀请进群
+EVENT_GROUP_DEL_ROBOT = "GROUP_DEL_ROBOT"                # 机器人被移出群
+
+# ── Intent 定义 ──
+# 按位标记，定义机器人监听的事件类型
+# 文档：https://bot.q.qq.com/wiki/develop/api-v2/dev-prepare/interface-obj/event-enum.html
+
+INTENT_GUILDS = 1 << 0                  # 1      — 频道事件
+INTENT_GUILD_MEMBERS = 1 << 1           # 2      — 频道成员
+INTENT_GUILD_MESSAGE_REACTIONS = 1 << 10  # 1024  — 消息表情
+INTENT_DIRECT_MESSAGE = 1 << 12         # 4096   — 私信事件
+INTENT_OPEN_FORUM_EVENT = 1 << 18       # 262144 — 开放论坛
+INTENT_AUDIO_OR_LIVE = 1 << 19          # 524288 — 音频/直播
+INTENT_GROUP_AND_C2C = 1 << 25          # 33554432 — 群聊和C2C事件（新版机器人核心）
+INTENT_INTERACTION = 1 << 26            # 67108864 — 交互事件
 
 # ── API 端点 ──
 
@@ -83,6 +107,7 @@ class QQOfficialAdapter(BaseAdapter):
     - app_secret: 应用密钥（必填）
     - token: 机器人令牌（必填，管理后台设置的自定义Token）
     - sandbox: 是否使用沙箱环境（默认true）
+    - intents: 监听的意图位掩码（默认监听群聊和C2C消息）
     - reconnect_interval: 重连间隔秒数（默认5）
     - max_reconnect_retries: 最大重连次数（默认-1无限）
     """
@@ -93,6 +118,7 @@ class QQOfficialAdapter(BaseAdapter):
         self._app_secret: str = str(self.config.get("app_secret", ""))
         self._token: str = str(self.config.get("token", ""))
         self._sandbox: bool = bool(self.config.get("sandbox", True))
+        self._intents: int = int(self.config.get("intents", INTENT_GROUP_AND_C2C))
         self._reconnect_interval: int = int(self.config.get("reconnect_interval", 5))
         self._max_retries: int = int(self.config.get("max_reconnect_retries", -1))
 
@@ -105,6 +131,7 @@ class QQOfficialAdapter(BaseAdapter):
         self._session_id: Optional[str] = None
         self._heartbeat_interval: float = 30.0  # 默认30秒，收到 HELLO 后会更新
         self._last_seq: Optional[int] = None     # 最后一次收到的消息序号（用于断线恢复）
+        self._identified: bool = False           # 是否已完成鉴权
 
         # 构建 WebSocket 连接地址
         self._ws_url = SANDBOX_WS_URL if self._sandbox else PRODUCTION_WS_URL
@@ -117,6 +144,7 @@ class QQOfficialAdapter(BaseAdapter):
             f"QQ官方适配器初始化完成, "
             f"app_id={self._app_id[:8]}..., "
             f"sandbox={self._sandbox}, "
+            f"intents={self._intents}, "
             f"ws_url={self._ws_url}"
         )
 
@@ -152,6 +180,7 @@ class QQOfficialAdapter(BaseAdapter):
         self._session = aiohttp.ClientSession()
         self._running = True
         self._retry_count = 0
+        self._identified = False
         self._listen_task = asyncio.create_task(self._listen_loop())
         self._logger.info("✅ QQ官方适配器已启动")
 
@@ -197,6 +226,7 @@ class QQOfficialAdapter(BaseAdapter):
         self._heartbeat_task = None
         self._listen_task = None
         self._session_id = None
+        self._identified = False
         self._logger.info("✅ QQ官方适配器已停止")
 
     # ───────────────────── WebSocket 监听循环 ─────────────────────
@@ -269,6 +299,7 @@ class QQOfficialAdapter(BaseAdapter):
                 self._retry_count += 1
                 self._ws = None
                 self._session_id = None
+                self._identified = False
 
                 # 取消旧的心跳任务
                 if self._heartbeat_task and not self._heartbeat_task.done():
@@ -313,12 +344,13 @@ class QQOfficialAdapter(BaseAdapter):
         # ── 按 OpCode 分发处理 ──
 
         if op == OP_HELLO:
-            # 连接成功，服务器返回 hello 事件
-            # 包含 session_id 和 heartbeat_interval（毫秒）
+            # 连接成功，服务器返回 HELLO 事件
+            # 包含 heartbeat_interval（毫秒）
+            # 注意：HELLO 不包含 session_id，session_id 在 READY 事件中
             await self._handle_hello(d)
 
         elif op == OP_DISPATCH:
-            # 事件分发（接收到的消息事件）
+            # 事件分发（包含 READY 事件和消息事件）
             self._logger.debug(f"📨 收到事件: {t}")
             await self._handle_event(t, d)
 
@@ -336,9 +368,10 @@ class QQOfficialAdapter(BaseAdapter):
         elif op == OP_INVALID_SESSION:
             # 会话无效，需要重新鉴权
             self._logger.error("❌ 无效会话 (INVALID_SESSION)，需要重新鉴权")
-            if self._ws and not self._ws.closed:
-                await self._ws.close()
-            # 重置 session 状态，监听循环会自动重连
+            self._identified = False
+            self._session_id = None
+            # 发送 IDENTIFY 重新鉴权（不关闭连接，直接重新鉴权）
+            await self._send_identify()
 
         else:
             self._logger.debug(f"收到未处理的 OpCode: {op}")
@@ -347,25 +380,80 @@ class QQOfficialAdapter(BaseAdapter):
         """
         处理 HELLO 事件（OpCode 10）
 
-        连接成功后，服务器返回 hello 事件，包含：
-        - session_id: 当前会话ID
+        连接成功后，服务器返回 HELLO 事件，包含：
         - heartbeat_interval: 心跳间隔（毫秒）
+
+        收到 HELLO 后必须发送 IDENTIFY（OpCode 2）进行鉴权。
 
         Args:
             data: HELLO 事件的 d 字段
         """
         heartbeat_interval_ms = data.get("heartbeat_interval", 30000)
         self._heartbeat_interval = heartbeat_interval_ms / 1000.0
-        self._session_id = data.get("session_id", "")
 
         self._logger.info(
             f"👋 收到 HELLO, "
-            f"session_id={self._session_id[:8] if self._session_id else 'N/A'}..., "
             f"heartbeat_interval={self._heartbeat_interval:.1f}s"
         )
 
         # 启动心跳任务
         self._start_heartbeat()
+
+        # 🐟 修复：发送 IDENTIFY 进行鉴权
+        # 根据 QQ 官方协议，收到 HELLO 后必须发送 IDENTIFY 才能开始接收事件
+        await self._send_identify()
+
+    async def _send_identify(self):
+        """
+        发送 IDENTIFY 鉴权请求（OpCode 2）
+
+        在收到 HELLO 后调用此方法进行鉴权，或 INVALID_SESSION 后重新鉴权。
+
+        QQ 官方 API 的 IDENTIFY 载荷格式：
+        {
+            "op": 2,
+            "d": {
+                "token": "Bot {app_id}.{token}",
+                "intents": <intents_bitmask>,
+                "shard": [0, 1],  // 分片信息
+                "properties": {
+                    "$os": "linux|mac|windows",
+                    "$device": "fishpool",
+                    "$browser": "fishpool"
+                }
+            }
+        }
+
+        Intents 说明：
+        - GROUP_AND_C2C_EVENT (1 << 25) = 33554432：监听群聊和C2C消息（新版机器人推荐）
+        """
+        if not self._ws or self._ws.closed:
+            self._logger.warning("WebSocket 未连接，无法发送 IDENTIFY")
+            return
+
+        identify_payload = {
+            "op": OP_IDENTIFY,
+            "d": {
+                "token": self._auth_header,
+                "intents": self._intents,
+                "shard": [0, 1],
+                "properties": {
+                    "$os": platform.system().lower(),
+                    "$device": "fishpool_bot",
+                    "$browser": "fishpool_bot",
+                },
+            },
+        }
+
+        try:
+            await self._ws.send_json(identify_payload)
+            self._logger.info(
+                f"🔐 已发送 IDENTIFY 鉴权请求 "
+                f"(intents={self._intents}, "
+                f"shard=[0,1])"
+            )
+        except Exception as e:
+            self._logger.error(f"发送 IDENTIFY 失败: {e}")
 
     # ───────────────────── 事件处理 ─────────────────────
 
@@ -376,19 +464,65 @@ class QQOfficialAdapter(BaseAdapter):
         根据事件类型解析不同的消息事件。
 
         Args:
-            event_type: 事件类型字符串（如 AT_MESSAGE_CREATE）
+            event_type: 事件类型字符串（如 "READY", "AT_MESSAGE_CREATE"）
             data: 事件数据的 d 字段
         """
+        # 🐟 修复：处理 READY 事件，获取 session_id
+        if event_type == EVENT_READY:
+            await self._handle_ready(data)
+
+        # 连接恢复成功
+        elif event_type == EVENT_RESUMED:
+            self._logger.info("🔄 连接恢复成功")
+
         # 群聊 @ 机器人消息
-        if event_type in (EVENT_AT_MESSAGE_CREATE, EVENT_GROUP_AT_MESSAGE_CREATE):
+        elif event_type in (EVENT_AT_MESSAGE_CREATE, EVENT_GROUP_AT_MESSAGE_CREATE):
             await self._handle_group_at_message(data)
 
         # 私聊消息
         elif event_type == EVENT_C2C_MESSAGE_CREATE:
             await self._handle_c2c_message(data)
 
+        # 机器人被邀请进群
+        elif event_type == EVENT_GROUP_ADD_ROBOT:
+            group_id = data.get("group_openid", data.get("guild_id", ""))
+            self._logger.info(f"📥 机器人被邀请进群: {group_id}")
+
+        # 机器人被移出群
+        elif event_type == EVENT_GROUP_DEL_ROBOT:
+            group_id = data.get("group_openid", data.get("guild_id", ""))
+            self._logger.info(f"📤 机器人被移出群: {group_id}")
+
         else:
             self._logger.debug(f"忽略未处理的事件类型: {event_type}")
+
+    async def _handle_ready(self, data: dict):
+        """
+        处理 READY 事件（鉴权成功）
+
+        IDENTIFY 鉴权成功后，服务器返回 READY 事件，包含：
+        - version: 版本号
+        - session_id: 当前会话ID（用于断线恢复和心跳）
+        - user: 机器人自身信息
+        - shard: 分片信息
+
+        这是获取 session_id 的正确时机。
+
+        Args:
+            data: READY 事件的 d 字段
+        """
+        self._session_id = data.get("session_id", "")
+        version = data.get("version", 0)
+        user = data.get("user", {})
+        user_id = user.get("id", "")
+
+        self._identified = True
+        self._logger.info(
+            f"✅ IDENTIFY 鉴权成功！"
+            f"session_id={self._session_id[:8] if self._session_id else 'N/A'}..., "
+            f"version={version}, "
+            f"bot_id={user_id}"
+        )
 
     async def _handle_group_at_message(self, data: dict):
         """
@@ -759,7 +893,8 @@ class QQOfficialAdapter(BaseAdapter):
         检查适配器是否处于正常运行状态：
         - 运行标志位为 True
         - WebSocket 连接正常
-        - 已建立有效 session
+        - 已完成 IDENTIFY 鉴权（_identified=True）
+        - 已建立有效 session（_session_id 不为空）
 
         Returns:
             正常运行返回 True
@@ -768,5 +903,6 @@ class QQOfficialAdapter(BaseAdapter):
             self._running
             and self._ws is not None
             and not self._ws.closed
+            and self._identified
             and self._session_id is not None
         )
