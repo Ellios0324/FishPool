@@ -37,3 +37,6 @@ htmlcov/
 
 # ── 容器 ──
 .docker/
+
+# 临时修复脚本
+_fix_step*.py
