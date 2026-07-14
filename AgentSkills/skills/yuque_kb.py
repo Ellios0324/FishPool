@@ -409,7 +409,7 @@ def yuque_ask(token_str: str, repo_id: Any, question: str) -> str:
         stop_words = ["什么", "怎么", "如何", "为什么", "哪个", "哪里", "多少",
                       "请问", "告诉", "是", "的", "了", "吗", "吧", "呢", "啊", "呀"]
         keywords = []
-        for word in re.split(r'[，。！？、；：""''（）\(\)\[\]\s]', question):
+        for word in re.split('[，。！？、；：""\'\'（）()\\[\\]\\s]', question):
             word = word.strip()
             if word and word not in stop_words and len(word) >= 2:
                 keywords.append(word)
