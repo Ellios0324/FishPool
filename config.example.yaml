@@ -1,0 +1,125 @@
+# ============================================
+#  🐟 FishPool 配置文件示例
+# ============================================
+#  将此文件复制为 config.yaml 后修改配置
+# ============================================
+#
+#  ⚠️ 注意事项：
+#  1. 请勿将包含真实密钥的 config.yaml 提交到 Git
+#  2. 敏感配置（Token、Secret）建议通过环境变量注入
+#  3. 开发环境建议开启 sandbox 模式测试
+# ============================================
+
+bot:
+  # 机器人名称
+  name: "FishPool"
+  # 版本号
+  version: "0.2.0"
+  # 日志级别: DEBUG | INFO | WARNING | ERROR
+  log_level: "INFO"
+
+# ── 消息适配器配置 ──
+adapters:
+  # ──────────────── QQ 适配器（旧方案 - OneBot v11）───────────────
+  # 说明：需要 NapCatQQ / Lagrange.Core / LLOneBot 等第三方框架配合
+  #       适合已有 QQ 客户端的场景，通过反向 WebSocket 接入
+  qq:
+    # 是否启用
+    enabled: true
+
+    # 协议类型: onebot_v11 (目前仅支持 OneBot v11)
+    protocol: "onebot_v11"
+
+    # WebSocket 连接地址（反向 WebSocket）
+    # NapCatQQ:   ws://localhost:8080/ws
+    # Lagrange:   ws://localhost:8080/ws
+    # LLOneBot:   ws://localhost:8080/onebot
+    ws_url: "ws://localhost:8080/ws"
+
+    # 机器人 QQ 号（用于识别 @ 消息）
+    bot_qq: "123456789"
+
+    # WebSocket 重连间隔（秒）
+    reconnect_interval: 5
+
+    # 最大重连次数（-1 表示无限重连）
+    max_reconnect_retries: -1
+
+    # OneBot 鉴权 Token（如果框架开启了鉴权）
+    # access_token: "your_token_here"
+
+  # ──────────────── QQ 官方机器人 API（推荐 - 无需第三方框架）───────────────
+  # 说明：直接在 https://q.qq.com/ 注册机器人应用，使用官方 API 接入
+  #       优势：无需维护 QQ 客户端，官方稳定的 API 服务
+  #       注意：启用后将替代上述 qq 适配器（OneBot 方式）
+  qq_official:
+    # 是否启用（默认关闭，启用后连接 QQ 官方 API）
+    enabled: false
+
+    # 连接模式: websocket | webhook
+    # websocket - 通过 WebSocket 长连接接收消息事件（推荐）
+    # webhook   - 通过 HTTP Webhook 接收消息（需公网地址）
+    mode: "websocket"
+
+    # ── 应用凭证（在 https://q.qq.com/ 创建应用后获取）──
+    # APPID（应用ID）
+    app_id: ""
+    # 应用密钥（用于获取 access_token，部分接口需要）
+    app_secret: ""
+    # 机器人令牌（在机器人管理页面设置的自定义 Token，必填）
+    token: ""
+
+    # 是否使用沙箱环境
+    # true  = 沙箱环境（开发测试），消息仅对测试成员可见
+    # false = 正式环境（上线后使用），消息对所有用户可见
+    sandbox: true
+
+    # WebSocket 重连配置
+    # 连接断开后等待重连的间隔（秒）
+    reconnect_interval: 5
+    # 最大重连次数（-1 表示无限重连）
+    max_reconnect_retries: -1
+
+    # Webhook 模式配置（mode: webhook 时使用）
+    # webhook_port: 8080
+    # webhook_path: "/qqbot"
+
+  # ──────────────── 微信适配器 ────────────────
+  wechat:
+    # 是否启用
+    enabled: false
+
+    # 协议类型: wcf | http
+    # wcf  = WeChatFerry (gRPC)
+    # http = HTTP API（通用方案）
+    protocol: "wcf"
+
+    # 服务地址
+    host: "127.0.0.1"
+
+    # 服务端口
+    # wcf 模式: 10086
+    # http 模式: 8080
+    port: 10086
+
+    # 消息轮询间隔（秒）
+    poll_interval: 1.0
+
+    # 管理员列表（微信号 wxid）
+    admin_users: []
+
+  # ──────────────── 未来可扩展 ────────────────
+  # telegram:
+  #   enabled: false
+  #   token: "YOUR_BOT_TOKEN"
+  #   webhook_url: "https://your-domain.com/webhook"
+
+  # discord:
+  #   enabled: false
+  #   token: "YOUR_BOT_TOKEN"
+  #   guild_id: "123456789"
+
+  # dingtalk:
+  #   enabled: false
+  #   app_key: "YOUR_APP_KEY"
+  #   app_secret: "YOUR_APP_SECRET"

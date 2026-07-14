@@ -1,12 +1,24 @@
-# FishPool 依赖清单
-# 安装: pip install -r requirements.txt
+# ============================================
+#  FishPool 依赖清单
+# ============================================
 
-openai>=1.0.0
-python-dotenv>=1.0.0
-pyyaml>=6.0
-fpdf2>=2.8.0
-openpyxl>=3.1.0
-markdown>=3.5.0
-python-docx>=1.1.0
-beautifulsoup4>=4.12.0
-prompt-toolkit>=3.0.0
+# ── 核心依赖 ──
+aiohttp>=3.9.0            # 异步 HTTP/WebSocket 客户端（QQ适配器必需）
+pyyaml>=6.0               # YAML 配置解析
+python-dotenv>=1.0.0      # .env 环境变量加载
+
+# ── QQ 适配器 ──
+# aiohttp 已包含，无需额外依赖
+
+# ── 微信适配器（wcf 模式需要） ──
+# wcf-python>=0.1.0       # WeChatFerry Python SDK (pip install wcf-python)
+# grpcio>=1.60.0          # gRPC 支持（wcf 依赖）
+
+# ── 可选依赖 ──
+# nonebot2>=2.0.0         # 如果使用 NoneBot2 作为 QQ 框架
+# python-telegram-bot>=20.0  # Telegram 适配器
+# discord.py>=2.3.0       # Discord 适配器
+
+# ── 开发依赖 ──
+pytest>=7.0               # 测试框架
+pytest-asyncio>=0.23.0    # 异步测试支持
