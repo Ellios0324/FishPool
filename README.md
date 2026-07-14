@@ -18,7 +18,7 @@ FishPool 是一个**多 Agent 协作系统**。您只需要用自然语言告诉
 
 所有 Agent 共享一套丰富的**技能工具箱**（AgentSkills），包括文件操作、Shell 执行、联网搜索、PDF/Excel 生成、Git 操作等。
 
-> **当前版本：v1.3.0**
+> **当前版本：v1.4.0**
 
 ---
 
@@ -78,6 +78,37 @@ AgentSkills 是系统核心的**可复用技能包**，为所有 Agent 提供基
 - 🔄 **热重载** — 文档变更后无需重启服务
 - 📖 自动生成 Swagger API 文档（`/docs`）
 
+### 🤖 消息适配器（fishpool 模块）
+
+FishPool 内置通用的**多平台消息适配器架构**，支持将机器人接入到 QQ、微信等消息平台：
+
+| 适配器 | 文件 | 说明 |
+|-------|------|------|
+| 🤖 **QQ 官方 API**（推荐） | `fishpool/adapters/qq_official_adapter.py` | 直接使用 [QQ 开放平台](https://q.qq.com/) 官方 API，**无需第三方框架** |
+| 📱 **QQ OneBot**（兼容） | `fishpool/adapters/qq_adapter.py` | 基于 OneBot v11 协议（反向 WebSocket），需配合 NapCatQQ/Lagrange 等框架 |
+| 💬 **微信 WeChatFerry** | `fishpool/adapters/wechat_adapter.py` | 基于 WeChatFerry (wcf) 的微信接入（Windows 平台） |
+
+#### 🔑 QQ 官方 API 接入配置
+
+```yaml
+# config.yaml
+adapters:
+  qq_official:
+    enabled: true
+    app_id: "YOUR_APP_ID"       # 在 https://q.qq.com/ 创建应用获取
+    app_secret: "YOUR_SECRET"   # 应用密钥
+    token: "YOUR_TOKEN"         # 机器人令牌（管理后台设置）
+    sandbox: true               # 沙箱环境（开发测试）
+```
+
+> 💡 **两种 QQ 接入方式对比：**
+> | 对比项 | 官方 API（推荐） | OneBot 协议（兼容） |
+> |-------|-----------------|-------------------|
+> | 是否需要 QQ 客户端 | ❌ 不需要 | ✅ 需要（NapCatQQ 等） |
+> | 配置复杂度 | 低（仅需 APPID+Token） | 中（需搭建框架） |
+> | 稳定性 | 官方保证 | 依赖第三方框架 |
+> | 功能覆盖 | 基础消息收发 | 更多协议功能 |
+
 ### 🚀 安装部署优化
 
 - **一键安装脚本** — 支持 `install.sh`（Linux/macOS）和 `install.bat`（Windows）
@@ -113,6 +144,20 @@ project/
 │   ├── start.sh                #   Linux/macOS 启动脚本
 │   ├── start.bat               #   Windows 启动脚本
 │   └── README.md               #   独立文档
+│
+├── fishpool/                   # 🐟 消息适配器模块（v1.4.0 新增）
+│   ├── __init__.py             #   模块入口
+│   ├── bot.py                  #   Bot 主入口（命令行启动）
+│   ├── core/
+│   │   └── dispatcher.py       #   Agent 调度器
+│   └── adapters/
+│       ├── __init__.py         #   适配器入口
+│       ├── base.py             #   抽象基类
+│       ├── message.py          #   统一消息模型
+│       ├── manager.py          #   适配器管理器
+│       ├── qq_adapter.py       #   📱 QQ OneBot 适配器
+│       ├── qq_official_adapter.py  # 🤖 QQ 官方 API 适配器（推荐）
+│       └── wechat_adapter.py   #   💬 微信适配器
 │
 ├── install.sh                  # 🚀 Linux/macOS 一键安装脚本
 ├── install.bat                 # 🚀 Windows 一键安装脚本
@@ -316,12 +361,25 @@ llm:
 | 📊 **文件处理** | openpyxl, fpdf2, python-docx, markdown |
 | 🌤️ **天气数据** | wttr.in, Open-Meteo API |
 | 🔍 **搜索引擎** | Bing Search API |
+| 🌐 **消息接入** | aiohttp（WebSocket + HTTP）、QQ 官方 API、OneBot v11 协议 |
 
 ---
 
 ## 📜 变更日志 / Changelog
 
-### v1.3.0（最新版本）
+### v1.4.0（最新版本）
+- 🎉 **重大更新**：新增 **QQ 官方机器人 API 适配器**（`QQOfficialAdapter`）
+- 🤖 **消息接入**：直接通过 QQ 开放平台官方 API 接入，**无需任何第三方 QQ 机器人框架**
+- 🚀 **WebSocket 协议**：完整实现 QQ 官方 Gateway OpCode 协议（HELLO/HEARTBEAT/DISPATCH/RECONNECT）
+- 💓 **自动心跳**：从 HELLO 事件获取心跳间隔，定时发送心跳包维持连接
+- 🔄 **自动重连**：网络断开后自动重连，可配置重连间隔和最大重试次数
+- 📩 **消息收发**：支持群聊 @ 消息（AT_MESSAGE_CREATE）和私聊（C2C_MESSAGE_CREATE）
+- 🔑 **三项凭证**：预留 APPID、APPSecret、Token 三个配置项
+- 🧪 **沙箱/正式**：支持 sandbox=true/false 一键切换开发/生产环境
+- 📝 **配置模板**：更新 config.example.yaml 和 .env.example，添加详细注释说明
+- 🔗 **兼容保留**：原有的 OneBot v11 适配器完整保留，两种方案可共存
+
+### v1.3.0
 - ✨ **功能优化**：CLI 显示的可用技能数量改为动态获取本地 skills 实际数量，不再硬编码
 - 🔧 **维护优化**：减少代码维护成本，技能增减后自动反映在 CLI 提示中
 
