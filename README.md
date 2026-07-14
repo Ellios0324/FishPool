@@ -18,7 +18,7 @@ FishPool 是一个**多 Agent 协作系统**。您只需要用自然语言告诉
 
 所有 Agent 共享一套丰富的**技能工具箱**（AgentSkills），包括文件操作、Shell 执行、联网搜索、PDF/Excel 生成、Git 操作等。
 
-> **当前版本：v1.1.1**
+> **当前版本：v1.2.0**
 
 ---
 
@@ -45,11 +45,12 @@ FishPool 是一个**多 Agent 协作系统**。您只需要用自然语言告诉
 
 ### 🛠️ AgentSkills 技能工具箱
 
-AgentSkills 是系统核心的**可复用技能包**，为所有 Agent 提供基础能力：
+AgentSkills 是系统核心的**可复用技能包**，为所有 Agent 提供基础能力（共计 **60 个工具 Schema**）：
 
 | 类别 | 技能模块 | 主要功能 |
 |------|---------|---------|
 | 📂 **文件操作** | `file_ops.py` | 读写文件、创建/删除目录、列出文件列表 |
+| 📄 **文件处理** | `file_ops.py` | `identify_file` 🔍 文件智能识别（图片/Office/PDF/文本）、`modify_docx` ✏️ 修改 Word 文档（替换文本/添加段落/添加表格/修改标题）、`modify_pptx` ✏️ 修改 PowerPoint（替换文本/添加幻灯片/修改标题）、`modify_xlsx` ✏️ 修改 Excel（修改单元格/追加行/重命名工作表/删除行） |
 | 💻 **Shell 执行** | `shell_ops.py` | 在本地执行 Shell 命令，支持超时控制 |
 | ✅ **语法检查** | `syntax_checker.py` | 检查 Python / YAML / HTML / CSS / JS 语法 |
 | 🌐 **联网搜索** | `web_search.py` | Bing 搜索（免费，无需 API Key）、新闻/图片/聚合搜索 |
@@ -102,26 +103,9 @@ project/
 │   ├── skill.py                #   Skill 统一对外接口
 │   ├── config.yaml             #   配置文件
 │   ├── requirements.txt        #   依赖清单
-│   ├── core/
-│   │   ├── agent.py            #   Agent 主循环
-│   │   └── llm_client.py       #   LLM 客户端封装
-│   └── skills/                 #   技能模块（16 个）
-│       ├── file_ops.py         #   文件操作
-│       ├── shell_ops.py        #   Shell 命令执行
-│       ├── syntax_checker.py   #   语法检查
-│       ├── web_search.py       #   联网搜索
-│       ├── git_ops.py          #   Git 操作（含自动标签/Label）
-│       ├── xlsx_generator.py   #   Excel 生成
-│       ├── pdf_generator.py    #   PDF 生成
-│       ├── markdown_writer.py  #   Markdown 输出
-│       ├── md_to_docx.py       #   Markdown 转 DOCX
-│       ├── weather_tool.py     #   天气查询
-│       ├── modify_tool.py      #   内容优化
-│       ├── c_project.py        #   C 语言项目
-│       ├── cpp_project.py      #   C++ 项目
-│       ├── csharp_project.py   #   C# 项目
-│       ├── yuque_kb.py         #   语雀知识库
-│       └── tencent_kb.py       #   腾讯 IMA 知识库
+│   └── core/
+│       ├── agent.py            #   Agent 主循环
+│       └── llm_client.py       #   LLM 客户端封装
 │
 ├── kb_api_server/              # 📚 知识库 API 服务器
 │   ├── server.py               #   主程序（FastAPI）
@@ -337,7 +321,14 @@ llm:
 
 ## 📜 变更日志 / Changelog
 
-### v1.1.1（当前版本）
+### v1.2.0（当前版本）
+- ✨ **新增功能**：新增「📄 文件处理」技能类别，包含文件智能识别、修改 Word/PPT/Excel 四项技能
+- 🔧 **工具扩展**：AgentSkills 工具 Schema 总数提升至 60 个
+- 🐛 **Bug 修复**：修复长内容超出终端宽度时的显示残留问题
+- ♻️ **代码重构**：新增 `_get_multiline_key_bindings()`、`_clear_lines()` 等辅助函数
+- 🧹 **其他优化**：删除缓存文件防止冲突
+
+### v1.1.1
 - ✨ **新增功能**：Shift+Enter 多行输入（`cli_input.py`），支持长代码/多行文本粘贴
 - 🐛 **Bug 修复**：修复长内容超出终端宽度时的显示残留问题
 - 🐛 **Bug 修复**：修复 CodingAgent/ModifyAgent 中导入顺序导致的 `NameError`
