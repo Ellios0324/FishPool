@@ -207,7 +207,7 @@ class FishPoolBot:
         # 运行状态
         self._running = False
 
-    def setup(self):
+    async def setup(self):
         """
         初始化系统组件
 
@@ -221,7 +221,7 @@ class FishPoolBot:
         self._setup_adapters()
 
         # ── 2. 设置消息处理器 ──
-        self.adapter_manager.set_message_handler(self._on_message)
+        await self.adapter_manager.set_message_handler(self._on_message)
 
         # ── 3. 注册 Agent ──
         self._setup_agents()
@@ -309,7 +309,7 @@ class FishPoolBot:
         2. 启动所有适配器
         3. 等待关闭信号
         """
-        self.setup()
+        await self.setup()
         self._running = True
 
         self.logger.info("=" * 50)

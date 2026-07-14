@@ -95,7 +95,7 @@ class QQOfficialAdapter(BaseAdapter):
     QQ 官方机器人 API 适配器
 
     使用 QQ 官方机器人 API（https://bot.q.qq.com/）接入，
-    通过 WebSocket 协议接收和发送消息。
+    通过 WebSocket 协议接收消息，通过 HTTP API 发送消息。
 
     使用前需要在 https://q.qq.com/ 创建机器人应用，获取：
     - APPID: 应用ID
@@ -132,13 +132,14 @@ class QQOfficialAdapter(BaseAdapter):
         self._heartbeat_interval: float = 30.0  # 默认30秒，收到 HELLO 后会更新
         self._last_seq: Optional[int] = None     # 最后一次收到的消息序号（用于断线恢复）
         self._identified: bool = False           # 是否已完成鉴权
+        self._access_token: Optional[str] = None  # 从 app_secret 换取的真实令牌
 
         # 构建 WebSocket 连接地址
         self._ws_url = SANDBOX_WS_URL if self._sandbox else PRODUCTION_WS_URL
 
         # 构建 Authorization Header
         # 格式: "Bot {app_id}.{token}"
-        self._auth_header = f"Bot {self._app_id}.{self._token}"
+        self._auth_header = f"QQBot {self._app_id}:{self._token}"
 
         self._logger.info(
             f"QQ官方适配器初始化完成, "
@@ -164,7 +165,8 @@ class QQOfficialAdapter(BaseAdapter):
         流程：
         1. 检查配置完整性（app_id / token 必填）
         2. 创建 HTTP 会话
-        3. 启动 WebSocket 监听循环（含自动重连）
+        3. 先获取 access_token（如果配置了 app_secret）
+        4. 启动 WebSocket 监听循环（含自动重连）
         """
         if not self._app_id:
             self._logger.error("QQ官方适配器启动失败: 缺少 app_id 配置")
@@ -181,6 +183,13 @@ class QQOfficialAdapter(BaseAdapter):
         self._running = True
         self._retry_count = 0
         self._identified = False
+
+        # 先获取 access_token
+        # 如果配置了 app_secret，则用 app_secret 换取 access_token
+        # 获取到的 access_token 将用于 IDENTIFY 鉴权
+        if self._app_secret:
+            await self._get_access_token()
+
         self._listen_task = asyncio.create_task(self._listen_loop())
         self._logger.info("✅ QQ官方适配器已启动")
 
@@ -259,10 +268,9 @@ class QQOfficialAdapter(BaseAdapter):
                 )
 
                 # 建立 WebSocket 连接
-                # 需要在 Header 中携带 Authorization: Bot {app_id}.{token}
-                headers = {
-                    "Authorization": self._auth_header,
-                }
+                # QQ 官方 API v2 的 WebSocket 连接不需要在 Header 中携带 Authorization
+                # 鉴权信息在 IDENTIFY 消息体内发送
+                headers = {}
 
                 async with self._session.ws_connect(
                     self._ws_url,
@@ -403,6 +411,50 @@ class QQOfficialAdapter(BaseAdapter):
         # 根据 QQ 官方协议，收到 HELLO 后必须发送 IDENTIFY 才能开始接收事件
         await self._send_identify()
 
+    async def _get_access_token(self) -> Optional[str]:
+        """
+        通过 app_id 和 app_secret 换取 access_token
+
+        QQ 官方 API v2 需要先通过此接口获取 access_token，
+        然后用 access_token 作为 WebSocket 鉴权的凭证。
+
+        POST https://sandbox.api.sgroup.qq.com/v2/app/access_token
+        Body: { "app_id": "xxx", "app_secret": "xxx" }
+        """
+        if not self._app_secret:
+            self._logger.warning("未配置 app_secret，无法获取 access_token")
+            return None
+            
+        url = f"{self._api_base}/v2/app/access_token"
+        body = {
+            "app_id": self._app_id,
+            "app_secret": self._app_secret,
+        }
+        headers = {
+            "Content-Type": "application/json",
+        }
+    
+        try:
+            self._logger.info("🔑 正在获取 access_token...")
+            async with self._session.post(url, json=body, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as resp:
+                if resp.status == 200:
+                    result = await resp.json()
+                    access_token = result.get("access_token")
+                    if access_token:
+                        self._access_token = access_token
+                        self._logger.info(f"✅ access_token 获取成功: {access_token[:20]}...")
+                        return access_token
+                    else:
+                        self._logger.error(f"❌ access_token 获取失败: 响应中无 access_token 字段: {result}")
+                else:
+                    error_text = await resp.text()
+                    self._logger.error(f"❌ access_token 获取失败 [HTTP {resp.status}]: {error_text[:200]}")
+        except Exception as e:
+            self._logger.error(f"❌ access_token 获取异常: {e}")
+    
+        return None
+
+
     async def _send_identify(self):
         """
         发送 IDENTIFY 鉴权请求（OpCode 2）
@@ -413,7 +465,7 @@ class QQOfficialAdapter(BaseAdapter):
         {
             "op": 2,
             "d": {
-                "token": "Bot {app_id}.{token}",
+                "token": "Bot {app_id}.{token} 或 QQBot {app_id}:{access_token}",
                 "intents": <intents_bitmask>,
                 "shard": [0, 1],  // 分片信息
                 "properties": {
@@ -426,15 +478,23 @@ class QQOfficialAdapter(BaseAdapter):
 
         Intents 说明：
         - GROUP_AND_C2C_EVENT (1 << 25) = 33554432：监听群聊和C2C消息（新版机器人推荐）
+
+        Token 格式说明：
+        - 如果通过 app_secret 获取到了 access_token，则使用 "QQBot {app_id}:{access_token}"
+        - 否则使用配置中的 token 字段 "QQBot {app_id}:{token}"
         """
         if not self._ws or self._ws.closed:
             self._logger.warning("WebSocket 未连接，无法发送 IDENTIFY")
             return
 
+        # 优先使用 access_token（从 app_secret 换取），否则使用配置的 QQBot 格式 token
+        identify_token = self._access_token if self._access_token else self._token
+        identify_auth = f"QQBot {self._app_id}:{identify_token}"
+
         identify_payload = {
             "op": OP_IDENTIFY,
             "d": {
-                "token": self._auth_header,
+                "token": identify_auth,
                 "intents": self._intents,
                 "shard": [0, 1],
                 "properties": {
@@ -450,7 +510,8 @@ class QQOfficialAdapter(BaseAdapter):
             self._logger.info(
                 f"🔐 已发送 IDENTIFY 鉴权请求 "
                 f"(intents={self._intents}, "
-                f"shard=[0,1])"
+                f"shard=[0,1], "
+                f"token_type={'access_token' if self._access_token else 'config_token'})"
             )
         except Exception as e:
             self._logger.error(f"发送 IDENTIFY 失败: {e}")
