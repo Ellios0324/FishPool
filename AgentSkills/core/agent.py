@@ -95,6 +95,11 @@ from ..skills import (
     tencent_kb_search,
     tencent_kb_ask,
     tencent_kb_status,
+    # ── 文件处理 ──
+    identify_file,
+    modify_docx,
+    modify_pptx,
+    modify_xlsx,
 )
 from .llm_client import LLMClient
 
@@ -184,6 +189,11 @@ TOOL_FUNCTIONS = {
     "tencent_kb_search": tencent_kb_search,
     "tencent_kb_ask": tencent_kb_ask,
     "tencent_kb_status": tencent_kb_status,
+    # ── 文件处理 ──
+    "identify_file": identify_file,
+    "modify_docx": modify_docx,
+    "modify_pptx": modify_pptx,
+    "modify_xlsx": modify_xlsx,
 }
 
 # ── 工具定义（JSON Schema）──
@@ -1588,6 +1598,108 @@ TOOLS_SCHEMA = [
             }
         }
     },
+    # ═══════════ 文件处理 ═══════════
+    {
+        "type": "function",
+        "function": {
+            "name": "identify_file",
+            "description": "🔍 识别常见文件类型并提取基本信息。支持图片(jpg/png/gif/bmp/webp/tiff)、Word(.docx)、PowerPoint(.pptx)、Excel(.xlsx)、PDF、文本文件(txt/csv/md/json等)。返回格式化的文件信息（大小、格式、行数、页数等）。自动安装缺失依赖。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "待识别文件的路径"
+                    }
+                },
+                "required": ["file_path"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "modify_docx",
+            "description": "✏️ 修改 Word (.docx) 文件。支持替换文本、添加段落、添加表格、修改标题。自动安装 python-docx。operations 为操作列表，支持类型：replace_text(替换文本)、add_paragraph(添加段落)、add_table(添加表格)、set_title(修改标题)。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "源 .docx 文件路径"
+                    },
+                    "operations": {
+                        "type": "array",
+                        "description": "操作列表，每个元素为一个 dict。示例：[{\"type\": \"replace_text\", \"old\": \"原文本\", \"new\": \"新文本\"}, {\"type\": \"add_paragraph\", \"text\": \"段落内容\", \"style\": \"Normal\"}, {\"type\": \"add_table\", \"rows\": 3, \"cols\": 4, \"data\": [[\"a\",\"b\"],[\"c\",\"d\"]]}, {\"type\": \"set_title\", \"text\": \"新标题\"}]",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "output_path": {
+                        "type": "string",
+                        "description": "输出文件路径（默认覆盖原文件）"
+                    }
+                },
+                "required": ["file_path", "operations"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "modify_pptx",
+            "description": "✏️ 修改 PowerPoint (.pptx) 文件。支持替换幻灯片文本、添加幻灯片、修改幻灯片标题。自动安装 python-pptx。operations 为操作列表，支持类型：replace_text(替换文本,可指定slide_index)、add_slide(添加幻灯片,含标题和内容列表)、set_slide_title(修改幻灯片标题)。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "源 .pptx 文件路径"
+                    },
+                    "operations": {
+                        "type": "array",
+                        "description": "操作列表。示例：[{\"type\": \"replace_text\", \"old\": \"旧文本\", \"new\": \"新文本\", \"slide_index\": 0}, {\"type\": \"add_slide\", \"title\": \"标题\", \"content\": [\"要点1\", \"要点2\"]}, {\"type\": \"set_slide_title\", \"slide_index\": 0, \"text\": \"新标题\"}]",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "output_path": {
+                        "type": "string",
+                        "description": "输出文件路径（默认覆盖原文件）"
+                    }
+                },
+                "required": ["file_path", "operations"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "modify_xlsx",
+            "description": "✏️ 修改 Excel (.xlsx) 文件。支持修改单元格、追加行、重命名工作表、删除行。自动安装 openpyxl。operations 为操作列表，支持类型：set_cell(修改单元格)、add_row(追加行)、set_sheet_name(重命名工作表)、delete_row(删除行)。",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_path": {
+                        "type": "string",
+                        "description": "源 .xlsx 文件路径"
+                    },
+                    "operations": {
+                        "type": "array",
+                        "description": "操作列表。示例：[{\"type\": \"set_cell\", \"sheet\": \"Sheet1\", \"row\": 1, \"col\": 1, \"value\": \"新值\"}, {\"type\": \"add_row\", \"sheet\": \"Sheet1\", \"data\": [\"a\",\"b\",\"c\"]}, {\"type\": \"set_sheet_name\", \"sheet\": \"Sheet1\", \"new_name\": \"新名称\"}, {\"type\": \"delete_row\", \"sheet\": \"Sheet1\", \"row_index\": 2}]",
+                        "items": {
+                            "type": "object"
+                        }
+                    },
+                    "output_path": {
+                        "type": "string",
+                        "description": "输出文件路径（默认覆盖原文件）"
+                    }
+                },
+                "required": ["file_path", "operations"]
+            }
+        }
+    },
 ]
 
 # ── 系统提示词 ──
@@ -1686,6 +1798,12 @@ SYSTEM_PROMPT = """
 使用方式：在 .env 中配置 TENCENT_KB_API_URL 和 TENCENT_KB_API_KEY，
 或在调用时传入 api_url / api_key 参数。
 
+## 📄 文件处理（识别与修改 Office 文档）
+- identify_file: 🔍 识别常见文件类型并提取基本信息。支持图片(jpg/png/gif/bmp/webp/tiff)、Word(.docx)、PowerPoint(.pptx)、Excel(.xlsx)、PDF、文本文件(txt/csv/md/json等)。
+- modify_docx: ✏️ 修改 Word (.docx) 文件。支持替换文本、添加段落、添加表格、修改标题。
+- modify_pptx: ✏️ 修改 PowerPoint (.pptx) 文件。支持替换幻灯片文本、添加幻灯片、修改幻灯片标题。
+- modify_xlsx: ✏️ 修改 Excel (.xlsx) 文件。支持修改单元格、追加行、重命名工作表、删除行。
+
 ## 💡 搜索工具选择指南
 - 查普通信息 → web_search（简单快速）
 - 需要看网页内容 → web_search_and_open
@@ -1726,6 +1844,7 @@ SYSTEM_PROMPT = """
 当用户询问最新信息、技术文档、API 用法等需要联网获取的内容时，请优先使用联网搜索工具。
 需要查天气时，使用 run_weather_agent（Dolphin）。需要优化内容时，使用 run_modify_agent。
 需要查企业内部知识库时，优先使用语雀或腾讯IMA知识库工具。
+如需识别或修改 Office 文档（Word/PPT/Excel）或图片等文件，使用 identify_file / modify_docx / modify_pptx / modify_xlsx 工具。
 请根据用户的需求，合理使用这些工具。
 """
 
@@ -1808,7 +1927,7 @@ class Agent:
 
     def run_interactive(self):
         """运行交互式对话模式"""
-        print("🤖 KillerWhale 已启动（流式输出 | 56 个工具 | 支持多引擎搜索 | 支持知识库接入）")
+        print("🤖 KillerWhale 已启动（流式输出 | 60 个工具 | 支持多引擎搜索 | 支持知识库接入 | 支持文件处理）")
         print("   输入 exit / quit / 再见 退出\n")
 
         EXIT_KEYWORDS = {"exit", "quit", "再见"}

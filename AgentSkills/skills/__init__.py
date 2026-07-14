@@ -1,6 +1,6 @@
 """
 工具模块 - 提供文件操作、Shell 执行、语法检查、联网搜索、PDF生成、项目构建、
-Git操作、语雀知识库、腾讯IMA知识库等基础工具
+Git操作、语雀知识库、腾讯IMA知识库、文件处理等基础工具
 """
 
 from .file_ops import (
@@ -100,6 +100,13 @@ from .tencent_kb import (
     tencent_kb_ask,
     tencent_kb_status,
 )
+# ── 文件处理（识别/修改 docx/pptx/xlsx）──
+from .file_processor import (
+    identify_file,
+    modify_docx,
+    modify_pptx,
+    modify_xlsx,
+)
 
 __all__ = [
     # 文件操作
@@ -186,4 +193,9 @@ __all__ = [
     "tencent_kb_search",
     "tencent_kb_ask",
     "tencent_kb_status",
+    # ── 文件处理 ──
+    "identify_file",
+    "modify_docx",
+    "modify_pptx",
+    "modify_xlsx",
 ]
