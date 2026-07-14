@@ -11,6 +11,7 @@ Agent 主循环模块
 import json
 
 from ..skills import (
+    __all__,
     # 文件操作
     read_file,
     write_file,
@@ -1927,7 +1928,7 @@ class Agent:
 
     def run_interactive(self):
         """运行交互式对话模式"""
-        print("🤖 KillerWhale 已启动（流式输出 | 60 个工具 | 支持多引擎搜索 | 支持知识库接入 | 支持文件处理）")
+        print(f"🤖 KillerWhale 已启动（流式输出 | {len(__all__)} 个工具 | 支持多引擎搜索 | 支持知识库接入 | 支持文件处理）")
         print("   输入 exit / quit / 再见 退出\n")
 
         EXIT_KEYWORDS = {"exit", "quit", "再见"}
